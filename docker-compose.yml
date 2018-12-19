@@ -1,0 +1,75 @@
+# Docker Compose Definitions for local Developer Environment
+version: "2.1"
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: appserive_zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka:0.10.1.0
+    container_name: appserive_kafka
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 'localhost'
+      KAFKA_ADVERTISED_PORT: 9092
+#      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+#      KAFKA_CREATE_TOPICS: "messages:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+    ports:
+      - "9092:9092"
+    expose:
+      - 9092
+  postgres:
+    image: postgres:10
+    restart: always
+    container_name: appserive_postgres
+    environment:
+      POSTGRES_USER: appservice
+      POSTGRES_PASSWORD: appservice
+      POSTGRES_DATABASE: appservice
+    ports:
+      - 5432:5432
+#  producer:
+#    restart: always
+#    build:
+#       context: appservice/producer
+#       dockerfile: Dockerfile
+#    volumes:
+#      - ./appservice:/appservice
+#    ports:
+#      - 8000:8000
+#    depends_on:
+#      - kafka
+#      - postgres
+#      - zookeeper
+#      - redis
+#    entrypoint: ["python3.6", "/appservice/producer_run.py"]
+#  consumer:
+#    restart: always
+#    build:
+#       context: appservice/consumer
+#       dockerfile: Dockerfile
+#    volumes:
+#      - ./appservice:/appservice
+#    ports:
+#      - 5000:5000
+#    depends_on:
+#      - kafka
+#      - postgres
+#      - zookeeper
+#      - redis
+#    entrypoint: ["python3.6", "/appservice/run.py"]
+  redis:
+    image: "redis"
+    container_name: appserive_redis
+    volumes:
+    - ./redis:/var/lib/redis/data
+    ports:
+    - 6379
+  cassandra:
+    container_name: cassandra
+    image: cassandra:latest
+    ports:
+      - "7000:7000"
+      - "9042:9042"
+    restart: always
