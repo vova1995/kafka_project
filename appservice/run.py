@@ -1,6 +1,6 @@
 from consumer import APP
-from consumer.database import Create_table
+from consumer.database import CreateTable
 
 if __name__ == "__main__":
-    Create_table()
+    CreateTable()
     APP.run(host="0.0.0.0", port=5000, debug=False)

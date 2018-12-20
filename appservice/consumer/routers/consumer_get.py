@@ -4,7 +4,7 @@ from consumer.models import Messages
 from sqlalchemy import func
 
 @APP.route("/consumer", methods=['GET'])
-def consumer_get_offset(request):
+async def consumer_get_offset(request):
     """
     Method that gets current offset from redis
     :param request:
@@ -17,7 +17,7 @@ def consumer_get_offset(request):
 
 
 @APP.route("/consumer_rows", methods=['GET'])
-def consumer_count(request):
+async def consumer_count(request):
     """
 
     :param request:
