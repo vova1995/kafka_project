@@ -1,22 +1,15 @@
-from flask import Flask
-from flask_migrate import Migrate, MigrateCommand
-from flask_script import Manager
-from flask_sqlalchemy import SQLAlchemy
 from sanic import Sanic
-
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import redis
 from .config import Config
 
 
-app = Sanic()
-app.config.from_object(Config)
-APP = Flask(__name__)
+APP = Sanic()
 APP.config.from_object(Config)
 
-DB = SQLAlchemy(APP)
-MIGRATE = Migrate(APP, DB, directory=APP.config['MIGRATION_DIR'])
-MANAGER = Manager(APP)
-MANAGER.add_command('DB', MigrateCommand)
+ENGINE = create_engine("postgresql://appservice:appservice@localhost:5432/appservice")
+SESSION = sessionmaker(bind=ENGINE)
 
 REDIS = redis.Redis(host=APP.config['REDIS_URL'], port=APP.config['REDIS_PORT'], db=0)
 

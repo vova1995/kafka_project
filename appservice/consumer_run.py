@@ -1,4 +1,5 @@
 from consumer.services import Consumer
 
-print('Consumer started')
-Consumer()
+if __name__ == "__main__":
+    print('Consumer started')
+    Consumer()

@@ -1,7 +1,8 @@
 from kafka import KafkaConsumer
-from consumer import DB, REDIS
-from consumer.models import Message
+from consumer import REDIS
+from consumer.models import Messages
 import json
+from consumer import SESSION
 
 class Consumer:
     def __init__(self):
@@ -14,7 +15,10 @@ class Consumer:
 
         for msg in consumer:
             print(f'topic: {msg.topic} and value added to database, offset {msg.offset}')
-            message = Message(msg.topic, f'key={msg.key}, value={msg.value}')
+            session = SESSION()
+            print(msg.value)
+            message = Messages(msg.topic, f'key={msg.key}, value={msg.value}')
             REDIS.set('kafka', msg.offset)
-            DB.session.add(message)
-            DB.session.commit()
+            session.add(message)
+            session.commit()
+            session.close()
