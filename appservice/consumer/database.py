@@ -1,6 +1,8 @@
 from .models import Messages
 from consumer import SESSION, CASSANDRA_SESSION, KEY_SPACE
 import logging
+from cassandra import ConsistencyLevel
+from cassandra.query import SimpleStatement
 
 
 class CreateTable:
@@ -23,10 +25,10 @@ class CreateCassandraTable:
         log.info("creating table...")
         session.execute("""
             CREATE TABLE IF NOT EXISTS messages (
-                thekey text,
-                col1 text,
-                col2 text,
-                PRIMARY KEY (thekey, col1)
+                id text,
+                topic text,
+                message text,
+                PRIMARY KEY (id)
             )
             """)
 
@@ -38,3 +40,15 @@ class DatabaseManager:
         session.add(data)
         session.commit()
         session.close()
+
+    @classmethod
+    def cassandra_query_insert(cls, id, topic, message):
+        session = CASSANDRA_SESSION
+        session.set_keyspace(KEY_SPACE)
+        session.execute("INSERT INTO messages (id, topic, message) VALUES (%s, %s, %s)", (id, topic, message))
+
+    @classmethod
+    def cassandra_query_select(cls):
+        session = CASSANDRA_SESSION
+        session.set_keyspace(KEY_SPACE)
+        session.execute("SELECT topic FROM messages")

@@ -3,10 +3,8 @@ from consumer import REDIS
 from consumer.models import Messages
 import json
 from consumer.database import DatabaseManager
-from consumer import CLUSTER
-from time import sleep
-import asyncio
-
+from datetime import datetime
+# import time
 
 TOPIC = 'test_topic'
 PARTITION = 0
@@ -22,16 +20,25 @@ class Consumer:
 
 
         counter = 0
+
         topic_partition = TopicPartition(TOPIC, PARTITION)
         consumer.assign([topic_partition])
-        # consumer.seek(topic_partition, offset_value)
+
+        def commit_every_10_seconds():
+            consumer.commit()
+            self.counter = 0
+
         for msg in consumer:
             print(f'topic: {msg.topic} and value added to database, offset {msg.offset}, value={msg.value}')
             counter += 1
             print(counter)
             message = Messages(msg.topic, f'key={msg.key}, value={msg.value}')
             DatabaseManager.session_commit(message)
+            DatabaseManager.cassandra_query_insert(str(datetime.utcnow()), msg.topic, f'key={msg.key}, value={msg.value}')
             REDIS.set('kafka', msg.offset)#more then 10 if i reload consumer
             if counter == 10:
                 consumer.commit()
                 counter = 0
+            # while True:
+            #     commit_every_10_seconds()
+            #     time.sleep(10)
