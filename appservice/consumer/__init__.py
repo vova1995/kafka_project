@@ -9,6 +9,7 @@ from .config import Config
 
 
 app = Sanic()
+app.config.from_object(Config)
 APP = Flask(__name__)
 APP.config.from_object(Config)
 
