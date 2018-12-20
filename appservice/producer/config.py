@@ -17,4 +17,3 @@ class Config:
     SECURITY_PASSWORD_SALT = 'my_precious_two'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    SQLALCHEMY_DATABASE_URI = "postgresql://appservice:appservice@localhost:5432/appservice"

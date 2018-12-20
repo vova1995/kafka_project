@@ -19,9 +19,6 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = "postgresql://appservice:appservice@localhost:5432/appservice"
 
-
-    MIGRATION_DIR = os.path.join(BASEDIR, 'migrations')
-
     REDIS_PORT = 6379
 
     if IS_IN_DOCKER:
