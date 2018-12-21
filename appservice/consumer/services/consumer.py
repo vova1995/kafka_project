@@ -1,4 +1,5 @@
 from kafka import KafkaConsumer, TopicPartition
+from kafka.errors import NoBrokersAvailable
 from consumer import REDIS
 from consumer.models import Messages
 import json
@@ -16,7 +17,7 @@ class Consumer:
     """
     def __init__(self):
         consumer = KafkaConsumer(group_id=TOPIC,
-                                 bootstrap_servers=['localhost:9092'],
+                                 bootstrap_servers=['kafka:9092'],
                                  enable_auto_commit=False,
                                  value_deserializer=lambda m: json.loads(m.decode('ascii'))
                                  )

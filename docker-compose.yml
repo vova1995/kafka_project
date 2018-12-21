@@ -7,10 +7,11 @@ services:
     ports:
       - "2181:2181"
   kafka:
+    restart: always
     image: wurstmeister/kafka:0.10.1.0
     container_name: appserive_kafka
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 'localhost'
+      KAFKA_ADVERTISED_HOST_NAME: 'kafka'
       KAFKA_ADVERTISED_PORT: 9092
 #      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 #      KAFKA_CREATE_TOPICS: "messages:1:1"
@@ -29,36 +30,59 @@ services:
       POSTGRES_DATABASE: appservice
     ports:
       - 5432:5432
-#  producer:
-#    restart: always
-#    build:
-#       context: appservice/producer
-#       dockerfile: Dockerfile
-#    volumes:
-#      - ./appservice:/appservice
-#    ports:
-#      - 8000:8000
-#    depends_on:
-#      - kafka
-#      - postgres
-#      - zookeeper
-#      - redis
-#    entrypoint: ["python3.6", "/appservice/producer_run.py"]
-#  consumer:
-#    restart: always
-#    build:
-#       context: appservice/consumer
-#       dockerfile: Dockerfile
-#    volumes:
-#      - ./appservice:/appservice
-#    ports:
-#      - 5000:5000
-#    depends_on:
-#      - kafka
-#      - postgres
-#      - zookeeper
-#      - redis
-#    entrypoint: ["python3.6", "/appservice/run.py"]
+  producer:
+    restart: always
+    container_name: appserive_producer
+    build:
+       context: appservice/producer
+       dockerfile: Dockerfile
+    volumes:
+      - ./appservice:/appservice
+    ports:
+      - 8000:8000
+    depends_on:
+      - kafka
+      - postgres
+      - zookeeper
+      - redis
+    entrypoint: ["python3.6", "/appservice/producer_run.py"]
+  consumer:
+    restart: always
+    container_name: appserive_consumer
+    build:
+       context: appservice/consumer
+       dockerfile: Dockerfile
+    volumes:
+      - ./appservice:/appservice
+    ports:
+      - 5000:5000
+    depends_on:
+      - kafka
+      - postgres
+      - zookeeper
+      - redis
+      - cassandra
+    entrypoint: ["python3.6", "/appservice/run.py"]
+  consumer_service:
+    build:
+      context: appservice/consumer
+      dockerfile: Dockerfile
+    restart: always
+    container_name: consumer_service
+    entrypoint: ["python3.6", "/appservice/consumer_run.py"]
+    environment:
+      C_FORCE_ROOT: "True"
+      DOCKER: 1
+    volumes:
+      - ./appservice:/appservice
+    depends_on:
+      - kafka
+      - postgres
+      - zookeeper
+      - redis
+      - consumer
+      - producer
+      - cassandra
   redis:
     image: "redis"
     container_name: appserive_redis

@@ -24,4 +24,4 @@ class Config:
     if IS_IN_DOCKER:
         REDIS_URL = 'appserive_redis'
     else:
-        REDIS_URL = 'localhost'
+        REDIS_URL = 'redis'

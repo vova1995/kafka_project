@@ -1,12 +1,11 @@
 from kafka import KafkaProducer
-from kafka.errors import KafkaError
+from kafka.errors import NoBrokersAvailable
 from producer.helper import getdata
 from producer import APP
 from sanic.response import json
 import json as j
 import logging
 import asyncio
-
 
 log = logging.getLogger()
 log.setLevel('DEBUG')
@@ -19,16 +18,15 @@ async def producer(request):
     topic = data['topic']
     key = data['key']
     value = data['value']
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                             value_serializer=lambda m: j.dumps(m).encode('utf-8'))
-
-    for _ in range(6):
+    while True:
         try:
-            future = producer.send(topic=topic, value={key: value})
-            getdata(future)
-        except KafkaError as e:
+            producer = KafkaProducer(bootstrap_servers=['kafka:9092'],
+                                 value_serializer=lambda m: j.dumps(m).encode('utf-8'))
+            break
+        except Exception as e:
             log.exception(e)
-        await asyncio.sleep(1)
-
+            await asyncio.sleep(10)
+    future = producer.send(topic=topic, value={key: value})
+    getdata(future)
 
     return json({"received": True, "message": request.json})
