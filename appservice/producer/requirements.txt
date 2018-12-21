@@ -2,3 +2,5 @@ kafka==1.3.5
 sanic==0.7.0
 Sanic-Plugins-Framework==0.5.2.dev20180201
 Sanic-Cors==0.9.3
+pytest==4.0.2
+pytest-cov==2.6.0
