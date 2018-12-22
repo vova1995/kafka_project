@@ -64,15 +64,11 @@ services:
       - cassandra
     entrypoint: ["python3.6", "/appservice/run.py"]
   consumer_service:
-    build:
-      context: appservice/consumer
-      dockerfile: Dockerfile
     restart: always
     container_name: consumer_service
-    entrypoint: ["python3.6", "/appservice/consumer_run.py"]
-    environment:
-      C_FORCE_ROOT: "True"
-      DOCKER: 1
+    build:
+       context: appservice/consumer
+       dockerfile: Dockerfile
     volumes:
       - ./appservice:/appservice
     depends_on:
@@ -80,9 +76,8 @@ services:
       - postgres
       - zookeeper
       - redis
-      - consumer
-      - producer
       - cassandra
+    entrypoint: ["python3.6", "/appservice/consumer_run.py"]
   redis:
     image: "redis"
     container_name: appserive_redis

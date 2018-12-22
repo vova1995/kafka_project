@@ -20,13 +20,13 @@ REDIS = redis.Redis(host=APP.config['REDIS_URL'], port=APP.config['REDIS_PORT'],
 CLUSTER = Cluster(["cassandra"])
 
 KEY_SPACE = 'messages'
-while True:
-    try:
-        CASSANDRA_SESSION = CLUSTER.connect()
-        break
-    except Exception as e:
-        print(e)
-        time.sleep(10)
+# while True:
+#     try:
+#         CASSANDRA_SESSION = CLUSTER.connect()
+#         break
+#     except Exception as e:
+#         print(e)
+#         time.sleep(10)
 
-# CASSANDRA_SESSION = CLUSTER.connect()
+CASSANDRA_SESSION = CLUSTER.connect()
 from .routers import (consumer_get)
