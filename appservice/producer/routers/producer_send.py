@@ -1,5 +1,4 @@
 from kafka import KafkaProducer
-from kafka.errors import NoBrokersAvailable
 from producer.helper import getdata
 from producer import APP
 from sanic.response import json
@@ -7,14 +6,13 @@ import json as j
 import logging
 import asyncio
 
-log = logging.getLogger()
-log.setLevel('DEBUG')
+logging.basicConfig(filename='producer_logs.txt' ,level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 @APP.route("/producer", methods=['POST'])
 async def producer(request):
     data = request.json
-    print(data)
+    logging.info(data)
     topic = data['topic']
     key = data['key']
     value = data['value']
@@ -24,9 +22,10 @@ async def producer(request):
                                  value_serializer=lambda m: j.dumps(m).encode('utf-8'))
             break
         except Exception as e:
-            log.exception(e)
+            logging.info(e)
             await asyncio.sleep(10)
-    future = producer.send(topic=topic, value={key: value})
-    getdata(future)
+    for _ in range(6):
+        future = producer.send(topic=topic, value={key: value})
+        getdata(future)
 
     return json({"received": True, "message": request.json})

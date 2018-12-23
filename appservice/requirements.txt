@@ -9,3 +9,4 @@ cassandra-driver==3.16.0
 psycopg2==2.7.3.2
 pytest==4.0.2
 pytest-cov==2.6.0
+kazoo==2.6.0
