@@ -10,3 +10,4 @@ psycopg2==2.7.3.2
 pytest==4.0.2
 pytest-cov==2.6.0
 asyncio==3.4.3
+kazoo==2.6.0

@@ -55,7 +55,7 @@ services:
     volumes:
       - ./appservice:/appservice
     ports:
-      - 5000:5000
+      - 5001:5001
     depends_on:
       - kafka
       - postgres

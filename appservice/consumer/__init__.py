@@ -5,6 +5,7 @@ import redis
 from .config import Config
 from cassandra.cluster import Cluster
 import time
+from kazoo.client import KazooClient
 
 
 
@@ -29,4 +30,6 @@ KEY_SPACE = 'messages'
 #         time.sleep(10)
 
 CASSANDRA_SESSION = CLUSTER.connect()
+ZK = KazooClient(hosts="zookeeper:2181")
+
 from .routers import (consumer_get)
