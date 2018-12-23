@@ -1,8 +1,7 @@
 from .models import Messages
-from consumer import SESSION, CASSANDRA_SESSION, KEY_SPACE
+from consumer import SESSION, CASSANDRA_SESSION, KEY_SPACE, REDIS
 import logging
-from cassandra import ConsistencyLevel
-from cassandra.query import SimpleStatement
+
 
 
 class CreateTable:
@@ -33,7 +32,7 @@ class CreateCassandraTable:
             """)
 
 
-class DatabaseManager:
+class PostgresDatabaseManager:
     @classmethod
     def session_commit(cls, data):
         session = SESSION()
@@ -41,6 +40,8 @@ class DatabaseManager:
         session.commit()
         session.close()
 
+
+class CassandraDatabaseManager:
     @classmethod
     def cassandra_query_insert(cls, id, topic, message):
         session = CASSANDRA_SESSION
@@ -52,3 +53,8 @@ class DatabaseManager:
         session = CASSANDRA_SESSION
         session.set_keyspace(KEY_SPACE)
         session.execute("SELECT topic FROM messages")
+
+class RedisDatabaseManager:
+    @classmethod
+    def redisset(cls, offset):
+        REDIS.set('kafka', offset)

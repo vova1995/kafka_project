@@ -23,12 +23,7 @@ Run docker-compose and make sure that you installed docker and docker compose. P
 ```
 Sudo docker-compose up --build
 ```
-Due to development in progress in order to launch python programs please use makefile
-```
-Launch consumer and producer command:
-make run
-```
-### Current usage
+### Usage
 Please go to the postman and enter following json and use link http://0.0.0.0:8000/producer
 
 ```

@@ -13,4 +13,4 @@ if __name__ == "__main__":
     #         time.sleep(10)
     CreateCassandraTable()
 
-    APP.run(host="0.0.0.0", port=5000, debug=True)
+    APP.run(host="0.0.0.0", port=5001, debug=False)

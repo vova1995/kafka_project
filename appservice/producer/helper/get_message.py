@@ -10,7 +10,6 @@ def getdata(data):
     """
     try:
         record_metadata = data.get(timeout=10)
-        print(record_metadata)
     except KafkaError:
         return json.dumps({
             'status': 'Application failed'
