@@ -1,4 +1,6 @@
 # Kafka_project
+[![Kafka](https://img.shields.io/badge/streaming_platform-kafka-black.svg?style=flat-square)](https://kafka.apache.org)
+[![Python](https://img.shields.io/badge/python-3.6+-blue.svg?style=flat-square)](https://www.python.org)
 
 This project allows you to send and consumer messages using apache kafka and python.
 
