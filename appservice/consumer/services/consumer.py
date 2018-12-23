@@ -1,8 +1,8 @@
 from kafka import KafkaConsumer, TopicPartition
 from consumer import ZK
-from consumer.models import Messages
+from consumer.models import Messages, Message
 import json
-from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager
+from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, CassandraDatabaseManager2
 from datetime import datetime
 import asyncio
 import logging
@@ -49,6 +49,8 @@ class Consumer:
             CassandraDatabaseManager.cassandra_query_insert(str(datetime.utcnow()), msg.topic, f'key={msg.key}, value={msg.value}')
             await asyncio.sleep(0)
             RedisDatabaseManager.redisset(msg.offset)
+            await asyncio.sleep(0)
+            CassandraDatabaseManager2.insert_data(topic=str(msg.topic), message=f'key={msg.key}, value={msg.value}')
             await asyncio.sleep(0)
             ZK.start()
             ZK.ensure_path("/my/offset")

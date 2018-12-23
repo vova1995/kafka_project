@@ -1,6 +1,7 @@
-from .models import Messages
+from .models import Messages, Message
 from consumer import SESSION, CASSANDRA_SESSION, KEY_SPACE, REDIS
 import logging
+from datetime import datetime
 
 
 
@@ -31,6 +32,11 @@ class CreateCassandraTable:
             )
             """)
 
+class CreateTableCassandra2:
+    def __init__(self):
+        Message.create_db()
+
+
 
 class PostgresDatabaseManager:
     @classmethod
@@ -58,3 +64,12 @@ class RedisDatabaseManager:
     @classmethod
     def redisset(cls, offset):
         REDIS.set('kafka', offset)
+
+class CassandraDatabaseManager2:
+    @classmethod
+    def insert_data(cls, topic, message):
+        msg = Message.create(topic=topic, created_at=datetime.now(), message=message)
+
+    @classmethod
+    def get_count(cls):
+        Message.objects.count()

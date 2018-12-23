@@ -4,8 +4,9 @@ from sqlalchemy.orm import sessionmaker
 import redis
 from .config import Config
 from cassandra.cluster import Cluster
-import time
 from kazoo.client import KazooClient
+from cassandra.cqlengine import connection
+
 
 
 
@@ -31,5 +32,6 @@ KEY_SPACE = 'messages'
 
 CASSANDRA_SESSION = CLUSTER.connect()
 ZK = KazooClient(hosts="zookeeper:2181")
+connection.setup(['cassandra'], KEY_SPACE, protocol_version=3)
 
 from .routers import (consumer_get)

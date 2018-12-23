@@ -2,7 +2,7 @@ from consumer import REDIS, APP, SESSION, ZK
 from sanic import response
 from consumer.models import Messages
 from sqlalchemy import func
-from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager
+from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, CassandraDatabaseManager2
 import logging
 
 logging.basicConfig(filename='consumer_logs.txt' ,level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -62,6 +62,19 @@ async def consumer_count(request):
     :return:
     """
     rows = CassandraDatabaseManager.cassandra_query_select()
+    logging.info(rows)
+    return response.json({
+        'rows': rows
+    })
+
+@APP.route("/consumer_rows_cassandra2", methods=['GET'])
+async def consumer_count(request):
+    """
+
+    :param request:
+    :return:
+    """
+    rows = CassandraDatabaseManager2.get_count()
     logging.info(rows)
     return response.json({
         'rows': rows
