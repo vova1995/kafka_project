@@ -1,4 +1,4 @@
-from kafka import KafkaProducer
+from aiokafka import AIOKafkaProducer
 from producer.helper import getdata
 from producer import APP
 from sanic.response import json
@@ -6,7 +6,7 @@ import json as j
 import logging
 import asyncio
 
-logging.basicConfig(filename='producer_logs.txt' ,level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='producer_logs.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 @APP.route("/producer", methods=['POST'])
@@ -21,16 +21,19 @@ async def producer(request):
     topic = data['topic']
     key = data['key']
     value = data['value']
+
     while True:
         try:
-            producer = KafkaProducer(bootstrap_servers=['kafka:9092'],
+            producer = AIOKafkaProducer(bootstrap_servers=['kafka:9092'], loop=APP.loop,
                                     value_serializer=lambda m: j.dumps(m).encode('utf-8'))
             break
         except Exception as e:
             logging.info(e)
             await asyncio.sleep(10)
-    for _ in range(6):
-        future = producer.send(topic=topic, value={key: value})
-        getdata(future)
-
+    await producer.start()
+    try:
+        for _ in range(6):
+            await producer.send_and_wait(topic=topic, value={key: value})
+    finally:
+        await producer.stop()
     return json({"received": True, "message": request.json})

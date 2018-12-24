@@ -5,3 +5,4 @@ Sanic-Cors==0.9.3
 pytest==4.0.2
 pytest-cov==2.6.0
 asyncio==3.4.3
+aiokafka==0.4.0

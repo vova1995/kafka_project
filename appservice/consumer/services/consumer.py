@@ -5,7 +5,8 @@ from kafka import KafkaConsumer, TopicPartition
 from consumer import ZK
 from consumer.models import Messages
 import json
-from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, CassandraDatabaseManager2, ZookeeperDatabaseManager
+from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
+    CassandraDatabaseManager2, ZookeeperDatabaseManager
 from datetime import datetime
 import asyncio
 import logging
@@ -13,19 +14,23 @@ import logging
 TOPIC = 'test_topic'
 PARTITION = 0
 
-logging.basicConfig(filename='consumer_logs.txt' ,level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+loop = asyncio.get_event_loop()
+
+logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class Consumer:
     """
     Consumer that reads messages from kafka
     """
+
     def __init__(self):
         self.consumer = KafkaConsumer(group_id=TOPIC,
-                                 bootstrap_servers=['kafka:9092'],
-                                 enable_auto_commit=False,
-                                 value_deserializer=lambda m: json.loads(m.decode('ascii'))
-                                 )
+                                      bootstrap_servers=['kafka:9092'],
+                                      enable_auto_commit=False,
+                                      value_deserializer=lambda m: json.loads(m.decode('ascii'))
+                                      )
 
         self.counter = 0
 
@@ -34,7 +39,7 @@ class Consumer:
 
     async def listener(self):
         """
-        listerer that catches messages
+        listener that catches messages
          and either store in db or commit
         :return:
         """
@@ -49,7 +54,8 @@ class Consumer:
             message = Messages(msg.topic, f'key={msg.key}, value={msg.value}')
             PostgresDatabaseManager.session_commit(message)
             await asyncio.sleep(0)
-            CassandraDatabaseManager.cassandra_query_insert(str(datetime.utcnow()), msg.topic, f'key={msg.key}, value={msg.value}')
+            CassandraDatabaseManager.cassandra_query_insert(str(datetime.utcnow()), msg.topic,
+                                                            f'key={msg.key}, value={msg.value}')
             await asyncio.sleep(0)
             RedisDatabaseManager.redisset(msg.offset)
             await asyncio.sleep(0)
