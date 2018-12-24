@@ -1,8 +1,11 @@
+"""
+    Module for consumer service
+"""
 from kafka import KafkaConsumer, TopicPartition
 from consumer import ZK
-from consumer.models import Messages, Message
+from consumer.models import Messages
 import json
-from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, CassandraDatabaseManager2
+from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, CassandraDatabaseManager2, ZookeeperDatabaseManager
 from datetime import datetime
 import asyncio
 import logging
@@ -53,8 +56,7 @@ class Consumer:
             CassandraDatabaseManager2.insert_data(topic=str(msg.topic), message=f'key={msg.key}, value={msg.value}')
             await asyncio.sleep(0)
             ZK.start()
-            ZK.ensure_path("/my/offset")
-            ZK.set("/my/offset", bytes(msg.offset))
+            ZookeeperDatabaseManager.setdata(msg.offset)
             ZK.stop()
 
     async def commit_10_seconds(self):

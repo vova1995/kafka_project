@@ -16,4 +16,3 @@ class Config:
     SECRET_KEY = 'this-really-needs-to-be-changed'
     SECURITY_PASSWORD_SALT = 'my_precious_two'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-

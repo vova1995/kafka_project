@@ -41,6 +41,7 @@ In order to check amount of rows in db and current offset from REDIS, user follo
 http://0.0.0.0:5000/consumer
 http://0.0.0.0:5000/consumer_rows
 http://0.0.0.0:5000/consumer_cassandra_rows
+http://0.0.0.0:5001/consumer_rows_cassandra2
 
 ```
 ### Docker container usage

@@ -11,6 +11,11 @@ logging.basicConfig(filename='producer_logs.txt' ,level=logging.INFO, format='%(
 
 @APP.route("/producer", methods=['POST'])
 async def producer(request):
+    """
+    Sanic producer that sends messages
+    :param request:
+    :return: json with message
+    """
     data = request.json
     logging.info(data)
     topic = data['topic']
@@ -19,7 +24,7 @@ async def producer(request):
     while True:
         try:
             producer = KafkaProducer(bootstrap_servers=['kafka:9092'],
-                                 value_serializer=lambda m: j.dumps(m).encode('utf-8'))
+                                    value_serializer=lambda m: j.dumps(m).encode('utf-8'))
             break
         except Exception as e:
             logging.info(e)

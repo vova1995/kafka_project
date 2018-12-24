@@ -1,11 +1,14 @@
+"""
+    Module for consumer routers
+"""
 from consumer import REDIS, APP, SESSION, ZK
 from sanic import response
 from consumer.models import Messages
 from sqlalchemy import func
-from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, CassandraDatabaseManager2
+from consumer.database import CassandraDatabaseManager, CassandraDatabaseManager2
 import logging
 
-logging.basicConfig(filename='consumer_logs.txt' ,level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 
@@ -25,7 +28,7 @@ async def consumer_get_offset(request):
 @APP.route("/consumer_offset", methods=['GET'])
 async def consumer_get_offset(request):
     """
-    Method that gets current offset from redis
+    Method that gets current offset from zookeeper
     :param request:
     :return: offset
     """
@@ -41,7 +44,7 @@ async def consumer_get_offset(request):
 @APP.route("/consumer_rows", methods=['GET'])
 async def consumer_count(request):
     """
-
+    Method that counts rows from postgres
     :param request:
     :return:
     """
@@ -57,7 +60,7 @@ async def consumer_count(request):
 @APP.route("/consumer_rows_cassandra", methods=['GET'])
 async def consumer_count(request):
     """
-
+    Method that counts rows from cassandra 1 implementation
     :param request:
     :return:
     """
@@ -70,7 +73,7 @@ async def consumer_count(request):
 @APP.route("/consumer_rows_cassandra2", methods=['GET'])
 async def consumer_count(request):
     """
-
+    Method that counts rows from cassandra 2 implementation
     :param request:
     :return:
     """

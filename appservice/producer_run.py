@@ -1,3 +1,6 @@
+"""
+    Producer run module
+"""
 from producer import APP
 
 

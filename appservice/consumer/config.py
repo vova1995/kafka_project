@@ -1,5 +1,5 @@
 """
-Configuration module for APP, MAIL
+Configuration module for APP
 """
 import os
 

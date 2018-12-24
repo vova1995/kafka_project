@@ -1,16 +1,25 @@
+"""
+    Module for databases actions
+"""
 from .models import Messages, Message
-from consumer import SESSION, CASSANDRA_SESSION, KEY_SPACE, REDIS
+from consumer import SESSION, CASSANDRA_SESSION, KEY_SPACE, REDIS, ZK
 import logging
 from datetime import datetime
 
 
 
 class CreateTable:
+    """
+    Class that creates postgres model
+    """
     def __init__(self):
         Messages.create_db()
 
 
 class CreateCassandraTable:
+    """
+    Class that creates cassandra keyspace and table
+    """
     def __init__(self):
         log = logging.getLogger()
         log.setLevel('DEBUG')
@@ -32,13 +41,19 @@ class CreateCassandraTable:
             )
             """)
 
+
 class CreateTableCassandra2:
+    """
+    Class that creates cassandra table from model
+    """
     def __init__(self):
         Message.create_db()
 
 
-
 class PostgresDatabaseManager:
+    """
+    Class that manage data in postgres
+    """
     @classmethod
     def session_commit(cls, data):
         session = SESSION()
@@ -48,6 +63,9 @@ class PostgresDatabaseManager:
 
 
 class CassandraDatabaseManager:
+    """
+    Class that manage data in cassandra
+    """
     @classmethod
     def cassandra_query_insert(cls, id, topic, message):
         session = CASSANDRA_SESSION
@@ -58,18 +76,37 @@ class CassandraDatabaseManager:
     def cassandra_query_select(cls):
         session = CASSANDRA_SESSION
         session.set_keyspace(KEY_SPACE)
-        session.execute("SELECT topic FROM messages")
+        res = session.execute("SELECT COUNT(*) FROM messages")
+        return res
+
 
 class RedisDatabaseManager:
+    """
+    Class that manage data in redis
+    """
     @classmethod
     def redisset(cls, offset):
         REDIS.set('kafka', offset)
 
+
 class CassandraDatabaseManager2:
+    """
+    Class that manage data in cassandra2
+    """
     @classmethod
     def insert_data(cls, topic, message):
         msg = Message.create(topic=topic, created_at=datetime.now(), message=message)
 
     @classmethod
     def get_count(cls):
-        Message.objects.count()
+        return Message.objects.count()
+
+
+class ZookeeperDatabaseManager:
+    """
+    Class that manage data in zookeeper
+    """
+    @classmethod
+    def setdata(cls, data):
+        ZK.ensure_path("/my/offset")
+        ZK.set("/my/offset", str(data).encode('utf-8'))
