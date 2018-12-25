@@ -10,6 +10,8 @@ from cassandra.cluster import Cluster
 from kazoo.client import KazooClient
 from cassandra.cqlengine import connection
 import logging
+from logger_conf import make_logger
+from config import CONSUMER_LOG_FILE_PATH
 
 
 APP = Sanic()
@@ -28,6 +30,8 @@ KEY_SPACE = 'messages'
 CASSANDRA_SESSION = CLUSTER.connect()
 ZK = KazooClient(hosts="zookeeper:2181")
 connection.setup(['cassandra'], KEY_SPACE, protocol_version=3)
+
+LOGGER = make_logger(CONSUMER_LOG_FILE_PATH)
 
 
 from .routers import (consumer_get)
