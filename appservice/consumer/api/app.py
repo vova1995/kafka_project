@@ -1,18 +1,15 @@
 """
     Module with main configs of project consumer
 """
+from cassandra.cluster import Cluster
+from cassandra.cqlengine import connection
+from kazoo.client import KazooClient
 from sanic import Sanic
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 import redis
 from .config import Config
-from cassandra.cluster import Cluster
-from kazoo.client import KazooClient
-from cassandra.cqlengine import connection
-import logging
-from logger_conf import make_logger
-from config import CONSUMER_LOG_FILE_PATH
-
 
 APP = Sanic()
 APP.config.from_object(Config)
@@ -31,25 +28,24 @@ CASSANDRA_SESSION = CLUSTER.connect()
 ZK = KazooClient(hosts="zookeeper:2181")
 connection.setup(['cassandra'], KEY_SPACE, protocol_version=3)
 
-LOGGER = make_logger(CONSUMER_LOG_FILE_PATH)
-
-
 from .routers import (consumer_get)
 
-from consumer.database import CreateTable, CreateCassandraTable, CreateTableCassandra2
+
+from api.database import PostgresDatabaseManager, CassandraDatabaseManager, CassandraDatabaseManager2
 
 
 @APP.listener('before_server_start')
 async def setup(app, loop):
-    CreateTable()
-    CreateCassandraTable()
-    CreateTableCassandra2()
+    PostgresDatabaseManager.create()
+    CassandraDatabaseManager.create_keyspace()
+    CassandraDatabaseManager.create()
+    CassandraDatabaseManager2.create()
     ZK.start()
 
 
 @APP.listener('after_server_start')
 async def notify_server_started(app, loop):
-    from consumer.services import Consumer
+    from api.services import Consumer
     print('Server successfully started!')
     consumer = Consumer()
     await consumer.listener()

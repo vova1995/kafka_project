@@ -45,7 +45,7 @@ services:
       - postgres
       - zookeeper
       - redis
-    entrypoint: ["python3.6", "/appservice/producer_run.py"]
+    entrypoint: ["python3.6", "/appservice/producer/run.py"]
   consumer:
     restart: always
     container_name: appserive_consumer
@@ -62,7 +62,7 @@ services:
       - zookeeper
       - redis
       - cassandra
-    entrypoint: ["python3.6", "/appservice/run.py"]
+    entrypoint: ["python3.6", "/appservice/consumer/run.py"]
   redis:
     image: "redis"
     container_name: appserive_redis

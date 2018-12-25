@@ -3,9 +3,8 @@ import tempfile
 
 import pytest
 
-# from producer import APP
 from consumer import APP
-from consumer.models import Messages
+from consumer.api.models import Messages
 from .fake_message import FakeMessage
 
 

@@ -1,11 +1,12 @@
 from aiokafka import AIOKafkaProducer
-from producer import APP
+from api.app import APP
 from sanic.response import json
 import json as j
-import logging
 import asyncio
+import logging
 
-logging.basicConfig(filename='producer_logs.txt', level=logging.INFO,
+
+logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 

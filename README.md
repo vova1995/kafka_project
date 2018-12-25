@@ -38,10 +38,11 @@ Please go to the postman and enter following json and use link http://0.0.0.0:80
 In order to check amount of rows in db and current offset from REDIS, user following urls
 
 ```
-http://0.0.0.0:5000/consumer
-http://0.0.0.0:5000/consumer_rows
+http://0.0.0.0:5000/consumer_redis_offset
+http://0.0.0.0:5000/consumer_zk_offset
+http://0.0.0.0:5000/consumer_postgres_rows
 http://0.0.0.0:5000/consumer_cassandra_rows
-http://0.0.0.0:5001/consumer_rows_cassandra2
+http://0.0.0.0:5001/consumer_cassandra2_rows
 
 ```
 ### Docker container usage

@@ -1,25 +1,27 @@
 """
     Module for consumer service
 """
-from aiokafka import AIOKafkaConsumer, TopicPartition
-from consumer.models import Messages
-import json
-from consumer.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
-    CassandraDatabaseManager2, ZookeeperDatabaseManager
-from datetime import datetime
 import asyncio
-# import logging
+import json
 import time
-from consumer import LOGGER
+from datetime import datetime
+from aiokafka import AIOKafkaConsumer
+
+from api.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
+    CassandraDatabaseManager2, ZookeeperDatabaseManager
+from api.models import Messages
+import logging
+
+
+logging.basicConfig(filename='consumer_responses.txt', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 TOPIC = 'test_topic'
 PARTITION = 0
 GROUP = 'test_group'
 
 loop = asyncio.get_event_loop()
-
-# logging.basicConfig(filename='consumer_responses.txt', level=logging.INFO,
-#                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class Consumer:
@@ -44,11 +46,11 @@ class Consumer:
         while True:
             try:
                 self.consumer.start()
-                LOGGER.info("Connection with Kafka broker successfully established")
+                logging.info("Connection with Kafka broker successfully established")
                 self.consumer.commit_task = asyncio.ensure_future(self.commit_every_10_seconds())
                 break
             except Exception as e:
-                LOGGER.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
+                logging.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
                 asyncio.sleep(3)
 
     async def listener(self):
@@ -61,28 +63,27 @@ class Consumer:
             await self.consumer.start()
 
             async for msg in self.consumer:
-                LOGGER.info(f'topic: {msg.topic} and value added to database, offset {msg.offset}, value={msg.value}')
+                logging.info(f'topic: {msg.topic} and value added to database, offset {msg.offset}, value={msg.value}')
                 self._uncommitted_messages += 1
-                LOGGER.info('Uncommited message = %s', self._uncommitted_messages)
+                logging.info('Uncommited message = %s', self._uncommitted_messages)
                 self.counter += 1
-                LOGGER.info('Counter = %s', self.counter)
+                logging.info('Counter = %s', self.counter)
 
                 if self.counter >= 10:
                     self.consumer.commit()
                     self._uncommitted_messages = 0
                     self.counter = 0
-                    LOGGER.info("Commit every 10 messages")
+                    logging.info("Commit every 10 messages")
 
-                message = Messages(topic=msg.topic,
-                                   message=f'key={msg.key}, value={msg.value}')
-                PostgresDatabaseManager.session_commit(message)
+                PostgresDatabaseManager.insert(topic=msg.topic,
+                                               message=f'key={msg.key}, value={msg.value}')
 
-                CassandraDatabaseManager.cassandra_query_insert(id=str(datetime.utcnow()),
+                CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
                                                                 topic=msg.topic,
                                                                 message=f'key={msg.key}, value={msg.value}')
                 RedisDatabaseManager.redisset(msg.offset)
 
-                CassandraDatabaseManager2.insert_data(topic=str(msg.topic),
+                CassandraDatabaseManager2.insert(topic=str(msg.topic),
                                                       message=f'key={msg.key}, value={msg.value}')
                 ZookeeperDatabaseManager.setdata(msg.offset)
         finally:
@@ -114,6 +115,6 @@ class Consumer:
                     continue
             if self.counter > 0:
                 await self.consumer.commit()
-                LOGGER.info("Every 10 seconds commit")
+                logging.info("Every 10 seconds commit")
                 self.counter = 0
             self._last_commit_time = time.time()

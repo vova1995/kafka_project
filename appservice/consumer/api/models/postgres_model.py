@@ -3,7 +3,7 @@
 """
 from sqlalchemy import Column, String, INTEGER
 from sqlalchemy.ext.declarative import declarative_base
-from consumer import ENGINE
+from api.app import ENGINE
 
 
 Base = declarative_base()
