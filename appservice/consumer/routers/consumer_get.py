@@ -5,7 +5,7 @@ from consumer import REDIS, APP, SESSION, ZK
 from sanic import response
 from consumer.models import Messages
 from sqlalchemy import func
-from consumer.database import CassandraDatabaseManager, CassandraDatabaseManager2
+from consumer.database import CassandraDatabaseManager, CassandraDatabaseManager2, RedisDatabaseManager
 import logging
 
 logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -19,8 +19,7 @@ async def consumer_get_offset(request):
     :param request:
     :return: offset
     """
-    logging.info("Wait for ")
-    offset = REDIS.get('kafka')
+    offset = RedisDatabaseManager.redisget()
     logging.info(offset)
     return response.json({
         'offset': offset

@@ -88,6 +88,20 @@ class RedisDatabaseManager:
     def redisset(cls, offset):
         REDIS.set('kafka', offset)
 
+    @classmethod
+    def redisset_counter(cls, offset):
+        REDIS.set('kafka_offset_counter', offset)
+
+    @classmethod
+    def redisget(cls):
+        result = REDIS.get('kafka')
+        return result
+
+    @classmethod
+    def redisget_counter(cls, offset):
+        result = REDIS.get('kafka_offset_counter')
+        return result
+
 
 class CassandraDatabaseManager2:
     """

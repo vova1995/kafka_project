@@ -9,6 +9,7 @@ from .config import Config
 from cassandra.cluster import Cluster
 from kazoo.client import KazooClient
 from cassandra.cqlengine import connection
+import logging
 
 
 APP = Sanic()

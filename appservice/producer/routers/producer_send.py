@@ -1,5 +1,4 @@
 from aiokafka import AIOKafkaProducer
-from producer.helper import getdata
 from producer import APP
 from sanic.response import json
 import json as j
@@ -33,8 +32,7 @@ async def producer(request):
             await asyncio.sleep(10)
     await producer.start()
     try:
-        for _ in range(6):
-            await producer.send_and_wait(topic=topic, value={key: value})
+        await producer.send_and_wait(topic=topic, value={key: value})
     finally:
         await producer.stop()
     return json({"received": True, "message": request.json})
