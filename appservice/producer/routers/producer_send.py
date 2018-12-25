@@ -6,7 +6,8 @@ import json as j
 import logging
 import asyncio
 
-logging.basicConfig(filename='producer_logs.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='producer_logs.txt', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 @APP.route("/producer", methods=['POST'])
@@ -25,7 +26,7 @@ async def producer(request):
     while True:
         try:
             producer = AIOKafkaProducer(bootstrap_servers=['kafka:9092'], loop=APP.loop,
-                                    value_serializer=lambda m: j.dumps(m).encode('utf-8'))
+                                        value_serializer=lambda m: j.dumps(m).encode('utf-8'))
             break
         except Exception as e:
             logging.info(e)

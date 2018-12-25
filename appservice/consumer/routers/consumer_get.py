@@ -19,6 +19,7 @@ async def consumer_get_offset(request):
     :param request:
     :return: offset
     """
+    logging.info("Wait for ")
     offset = REDIS.get('kafka')
     logging.info(offset)
     return response.json({
@@ -32,10 +33,8 @@ async def consumer_get_offset(request):
     :param request:
     :return: offset
     """
-    ZK.start()
     offset, stat = ZK.get("my/offset")
     logging.info(offset)
-    ZK.stop()
     return response.json({
         'offset': offset
     })
