@@ -5,17 +5,13 @@ from cassandra.cluster import Cluster
 from cassandra.cqlengine import connection
 from kazoo.client import KazooClient
 from sanic import Sanic
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
+from .config import Config, CONSUMER_LOG_FILE_PATH
+from .logger_conf import make_logger
 import redis
-from .config import Config
+import logging
 
 APP = Sanic()
 APP.config.from_object(Config)
-
-ENGINE = create_engine("postgresql://appservice:appservice@postgres:5432/appservice")
-SESSION = sessionmaker(bind=ENGINE)
 
 REDIS = redis.Redis(host=APP.config['REDIS_URL'], port=APP.config['REDIS_PORT'], db=0)
 
@@ -28,6 +24,8 @@ CASSANDRA_SESSION = CLUSTER.connect()
 ZK = KazooClient(hosts="zookeeper:2181")
 connection.setup(['cassandra'], KEY_SPACE, protocol_version=3)
 
+LOGGER = make_logger(CONSUMER_LOG_FILE_PATH)
+
 from .routers import (consumer_get)
 
 
@@ -36,7 +34,11 @@ from api.database import PostgresDatabaseManager, CassandraDatabaseManager, Cass
 
 @APP.listener('before_server_start')
 async def setup(app, loop):
-    PostgresDatabaseManager.create()
+    try:
+        PostgresDatabaseManager.create()
+    except Exception as e:
+        logging.critical(e)
+        pass
     CassandraDatabaseManager.create_keyspace()
     CassandraDatabaseManager.create()
     CassandraDatabaseManager2.create()

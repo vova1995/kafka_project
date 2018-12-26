@@ -9,13 +9,7 @@ from aiokafka import AIOKafkaConsumer
 
 from api.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
     CassandraDatabaseManager2, ZookeeperDatabaseManager
-from api.models import Messages
-import logging
-
-
-logging.basicConfig(filename='consumer_responses.txt', level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
+from api.app import LOGGER
 
 TOPIC = 'test_topic'
 PARTITION = 0
@@ -46,11 +40,11 @@ class Consumer:
         while True:
             try:
                 self.consumer.start()
-                logging.info("Connection with Kafka broker successfully established")
+                LOGGER.info("Connection with Kafka broker successfully established")
                 self.consumer.commit_task = asyncio.ensure_future(self.commit_every_10_seconds())
                 break
             except Exception as e:
-                logging.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
+                LOGGER.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
                 asyncio.sleep(3)
 
     async def listener(self):
@@ -63,28 +57,26 @@ class Consumer:
             await self.consumer.start()
 
             async for msg in self.consumer:
-                logging.info(f'topic: {msg.topic} and value added to database, offset {msg.offset}, value={msg.value}')
+                LOGGER.info(f'topic: {msg.topic} and value added to database, offset {msg.offset}, value={msg.value}')
                 self._uncommitted_messages += 1
-                logging.info('Uncommited message = %s', self._uncommitted_messages)
+                LOGGER.info('Uncommited message = %s', self._uncommitted_messages)
                 self.counter += 1
-                logging.info('Counter = %s', self.counter)
+                LOGGER.info('Counter = %s', self.counter)
 
                 if self.counter >= 10:
                     self.consumer.commit()
                     self._uncommitted_messages = 0
                     self.counter = 0
-                    logging.info("Commit every 10 messages")
+                    LOGGER.info("Commit every 10 messages")
 
-                PostgresDatabaseManager.insert(topic=msg.topic,
-                                               message=f'key={msg.key}, value={msg.value}')
-
+                PostgresDatabaseManager.insert(msg.topic,
+                                               f'key={msg.key}, value={msg.value}')
                 CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
-                                                                topic=msg.topic,
-                                                                message=f'key={msg.key}, value={msg.value}')
-                RedisDatabaseManager.redisset(msg.offset)
-
+                                                topic=msg.topic,
+                                                message=f'key={msg.key}, value={msg.value}')
                 CassandraDatabaseManager2.insert(topic=str(msg.topic),
-                                                      message=f'key={msg.key}, value={msg.value}')
+                                                 message=f'key={msg.key}, value={msg.value}')
+                RedisDatabaseManager.redisset(msg.offset)
                 ZookeeperDatabaseManager.setdata(msg.offset)
         finally:
             await self.consumer.stop()
@@ -115,6 +107,6 @@ class Consumer:
                     continue
             if self.counter > 0:
                 await self.consumer.commit()
-                logging.info("Every 10 seconds commit")
+                LOGGER.info("Every 10 seconds commit")
                 self.counter = 0
             self._last_commit_time = time.time()
