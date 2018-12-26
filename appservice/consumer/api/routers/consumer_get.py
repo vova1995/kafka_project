@@ -1,14 +1,11 @@
 """
     Module for consumer routers
 """
-from api.logger_conf import logger as logging
-
 from sanic import response
 from sqlalchemy import func
 
-from api.app import APP, SESSION, ZK
-from api.database import CassandraDatabaseManager, CassandraDatabaseManager2, RedisDatabaseManager
-from api.models import Messages
+from api.app import APP, ZK
+from api.database import CassandraDatabaseManager, CassandraDatabaseManager2, RedisDatabaseManager, PostgresDatabaseManager
 import logging
 
 
@@ -50,12 +47,10 @@ async def consumer_count(request):
     :param request:
     :return:
     """
-    session = SESSION()
-
-    result = session.query(func.count(Messages.id)).scalar()
-    logging.info(result)
+    rows = await PostgresDatabaseManager.select_count()
+    logging.info(rows)
     return response.json({
-        'rows': result
+        'rows': rows
     })
 
 

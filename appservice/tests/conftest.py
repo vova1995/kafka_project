@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from consumer import APP
+from consumer.api.app import APP
 from consumer.api.models import Messages
 from .fake_message import FakeMessage
 

@@ -8,6 +8,8 @@ BASEDIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
 IS_IN_DOCKER = os.environ.get('DOCKER', False)
 
+CONSUMER_LOG_FILE_PATH = 'logs/consumer_log.txt'
+
 
 class Config:
     """

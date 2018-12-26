@@ -1,11 +1,14 @@
 """
     Module for databases actions
 """
-import logging
 from datetime import datetime
 
-from api.app import SESSION, CASSANDRA_SESSION, KEY_SPACE, REDIS, ZK
+from api.app import CASSANDRA_SESSION, KEY_SPACE, REDIS, ZK
 from api.models import Messages, Message
+from aiopg.sa import create_engine
+from sqlalchemy.sql.ddl import CreateTable
+import asyncio
+import logging
 
 
 class PostgresDatabaseManager:
@@ -14,22 +17,39 @@ class PostgresDatabaseManager:
     """
 
     @classmethod
-    def create(cls):
-        Messages.create_db()
+    async def create_engine(cls):
+        engine = await create_engine(user='appservice',
+                                     database='appservice',
+                                     host='postgres',
+                                     password='appservice')
+        return engine
 
     @classmethod
-    def insert(cls, topic, message):
-        session = SESSION()
-        msg = Messages(topic, message)
-        session.add(msg)
-        session.commit()
-        session.close()
+    async def create(cls):
+        engine = await PostgresDatabaseManager.create_engine()
+        async with engine.acquire() as conn:
+            logging.critical('POSRTGTREEEDE')
+            await conn.execute(CreateTable(Messages))
+
+    @classmethod
+    async def insert(cls, topic, message):
+        engine = await PostgresDatabaseManager.create_engine()
+        async with engine.acquire() as conn:
+            await conn.execute(Messages.insert().values(topic, message))
+
+    @classmethod
+    async def select_count(cls):
+        engine = await PostgresDatabaseManager.create_engine()
+        async with engine.acquire() as conn:
+            async with conn.execute(Messages.select()) as cur:
+                return cur.rowcount
 
 
 class CassandraDatabaseManager:
     """
     Class that manage data in cassandra
     """
+
     @classmethod
     def create_keyspace(cls):
         log = logging.getLogger()
@@ -93,6 +113,7 @@ class RedisDatabaseManager:
     """
     Class that manage data in redis
     """
+
     @classmethod
     def redisget(cls):
         result = REDIS.get('kafka')
@@ -107,6 +128,7 @@ class ZookeeperDatabaseManager:
     """
     Class that manage data in zookeeper
     """
+
     @classmethod
     def setdata(cls, data):
         ZK.ensure_path("/my/offset")

@@ -6,7 +6,7 @@ import asyncio
 import logging
 
 
-logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO,
+logging.basicConfig(filename='producer_logs.txt', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
