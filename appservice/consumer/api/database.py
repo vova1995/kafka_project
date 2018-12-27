@@ -35,7 +35,7 @@ class PostgresDatabaseManager:
     async def insert(cls, topic, message):
         engine = await PostgresDatabaseManager.create_engine()
         async with engine.acquire() as conn:
-            await conn.execute(Messages.insert().values(topic, message))
+            await conn.execute(Messages.insert().values(topic=topic, message=message))
 
     @classmethod
     async def select_count(cls):

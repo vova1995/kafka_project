@@ -35,7 +35,7 @@ from api.database import PostgresDatabaseManager, CassandraDatabaseManager, Cass
 @APP.listener('before_server_start')
 async def setup(app, loop):
     try:
-        PostgresDatabaseManager.create()
+        await PostgresDatabaseManager.create()
     except Exception as e:
         logging.critical(e)
         pass

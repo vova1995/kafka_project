@@ -69,8 +69,8 @@ class Consumer:
                     self.counter = 0
                     LOGGER.info("Commit every 10 messages")
 
-                PostgresDatabaseManager.insert(msg.topic,
-                                               f'key={msg.key}, value={msg.value}')
+                await PostgresDatabaseManager.insert(topic=str(msg.topic),
+                                                     message=f'key={msg.key}, value={msg.value}')
                 CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
                                                 topic=msg.topic,
                                                 message=f'key={msg.key}, value={msg.value}')
