@@ -29,7 +29,7 @@ LOGGER = make_logger(CONSUMER_LOG_FILE_PATH)
 from .routers import (consumer_get)
 
 
-from api.database import PostgresDatabaseManager, CassandraDatabaseManager, CassandraDatabaseManager2
+from api.database import PostgresDatabaseManager, CassandraDatabaseManager
 
 
 @APP.listener('before_server_start')
@@ -41,14 +41,13 @@ async def setup(app, loop):
         pass
     CassandraDatabaseManager.create_keyspace()
     CassandraDatabaseManager.create()
-    CassandraDatabaseManager2.create()
     ZK.start()
 
 
 @APP.listener('after_server_start')
 async def notify_server_started(app, loop):
     from api.services import Consumer
-    print('Server successfully started!')
+    logging.critical('Server successfully started!')
     consumer = Consumer()
     await consumer.listener()
 

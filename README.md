@@ -42,8 +42,6 @@ http://0.0.0.0:5001/consumer_redis_offset
 http://0.0.0.0:5001/consumer_zk_offset
 http://0.0.0.0:5001/consumer_postgres_rows
 http://0.0.0.0:5001/consumer_cassandra_rows
-http://0.0.0.0:5001/consumer_cassandra2_rows
-
 ```
 ### Docker container usage
 In order to check tables in postgres and cassandra use following

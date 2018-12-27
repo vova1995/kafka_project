@@ -5,7 +5,7 @@ from sanic import response
 from sqlalchemy import func
 
 from api.app import APP, ZK
-from api.database import CassandraDatabaseManager, CassandraDatabaseManager2, RedisDatabaseManager, PostgresDatabaseManager
+from api.database import CassandraDatabaseManager, RedisDatabaseManager, PostgresDatabaseManager
 import logging
 
 
@@ -61,7 +61,7 @@ async def consumer_count(request):
     :param request:
     :return:
     """
-    rows = CassandraDatabaseManager.select_count()
+    rows = await CassandraDatabaseManager.select_count()
     logging.info(rows)
     return response.json({
         'rows': rows

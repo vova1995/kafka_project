@@ -8,7 +8,7 @@ from datetime import datetime
 from aiokafka import AIOKafkaConsumer
 
 from api.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
-    CassandraDatabaseManager2, ZookeeperDatabaseManager
+    ZookeeperDatabaseManager
 from api.app import LOGGER
 
 TOPIC = 'test_topic'
@@ -71,11 +71,9 @@ class Consumer:
 
                 await PostgresDatabaseManager.insert(topic=str(msg.topic),
                                                      message=f'key={msg.key}, value={msg.value}')
-                CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
-                                                topic=msg.topic,
-                                                message=f'key={msg.key}, value={msg.value}')
-                CassandraDatabaseManager2.insert(topic=str(msg.topic),
-                                                 message=f'key={msg.key}, value={msg.value}')
+                await CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
+                                                      topic=msg.topic,
+                                                      message=f'key={msg.key}, value={msg.value}')
                 RedisDatabaseManager.redisset(msg.offset)
                 ZookeeperDatabaseManager.setdata(msg.offset)
         finally:

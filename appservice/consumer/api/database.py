@@ -4,11 +4,14 @@
 from datetime import datetime
 
 from api.app import CASSANDRA_SESSION, KEY_SPACE, REDIS, ZK
-from api.models import Messages, Message
+from api.models import Messages
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
 import asyncio
 import logging
+
+log = logging.getLogger()
+log.setLevel('DEBUG')
 
 
 class PostgresDatabaseManager:
@@ -52,8 +55,6 @@ class CassandraDatabaseManager:
 
     @classmethod
     def create_keyspace(cls):
-        log = logging.getLogger()
-        log.setLevel('DEBUG')
         session = CASSANDRA_SESSION
         log.info("creating keyspace...")
         session.execute("""
@@ -78,35 +79,20 @@ class CassandraDatabaseManager:
                         """)
 
     @classmethod
-    def insert(cls, id, topic, message):
+    async def insert(cls, id, topic, message):
         session = CASSANDRA_SESSION
         session.set_keyspace(KEY_SPACE)
-        session.execute("INSERT INTO messages (id, topic, message) VALUES (%s, %s, %s)", (id, topic, message))
+        try:
+            session.execute_async("INSERT INTO messages (id, topic, message) VALUES (%s, %s, %s)", (id, topic, message)).result()
+        except Exception as e:
+            log.error(e)
 
     @classmethod
-    def select_count(cls):
+    async def select_count(cls):
         session = CASSANDRA_SESSION
         session.set_keyspace(KEY_SPACE)
-        res = session.execute("SELECT COUNT(*) FROM messages")
+        res = session.execute_async("SELECT COUNT(*) FROM messages").result()
         return res
-
-
-class CassandraDatabaseManager2:
-    """
-    Class that manages data in cassandra2
-    """
-
-    @classmethod
-    def create(cls):
-        Message.create_db()
-
-    @classmethod
-    def insert(cls, topic, message):
-        msg = Message.create(topic=topic, created_at=datetime.now(), message=message)
-
-    @classmethod
-    def get_count(cls):
-        return Message.objects.count()
 
 
 class RedisDatabaseManager:
