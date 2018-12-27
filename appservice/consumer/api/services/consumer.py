@@ -74,7 +74,7 @@ class Consumer:
                 await CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
                                                       topic=msg.topic,
                                                       message=f'key={msg.key}, value={msg.value}')
-                RedisDatabaseManager.redisset(msg.offset)
+                await RedisDatabaseManager.redisset(msg.offset)
                 ZookeeperDatabaseManager.setdata(msg.offset)
         finally:
             await self.consumer.stop()

@@ -14,20 +14,20 @@ logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO,
 
 
 @APP.route("/consumer_redis_offset", methods=['GET'])
-async def consumer_get_offset(request):
+async def redis_offset(request):
     """
     Method that gets current offset from redis
     :param request:
     :return: offset
     """
-    offset = RedisDatabaseManager.redisget()
+    offset = await RedisDatabaseManager.redisget()
     logging.info(offset)
     return response.json({
         'offset': offset
     })
 
 @APP.route("/consumer_zk_offset", methods=['GET'])
-async def consumer_get_offset(request):
+async def zk_offset(request):
     """
     Method that gets current offset from zookeeper
     :param request:
@@ -41,7 +41,7 @@ async def consumer_get_offset(request):
 
 
 @APP.route("/consumer_postgres_rows", methods=['GET'])
-async def consumer_count(request):
+async def postgres_count(request):
     """
     Method that counts rows from postgres
     :param request:
@@ -55,7 +55,7 @@ async def consumer_count(request):
 
 
 @APP.route("/consumer_cassandra_rows", methods=['GET'])
-async def consumer_count(request):
+async def cassandra_count(request):
     """
     Method that counts rows from cassandra 1 implementation
     :param request:
@@ -67,15 +67,3 @@ async def consumer_count(request):
         'rows': rows
     })
 
-@APP.route("/consumer_cassandra2_rows", methods=['GET'])
-async def consumer_count(request):
-    """
-    Method that counts rows from cassandra 2 implementation
-    :param request:
-    :return:
-    """
-    rows = CassandraDatabaseManager2.get_count()
-    logging.info(rows)
-    return response.json({
-        'rows': rows
-    })

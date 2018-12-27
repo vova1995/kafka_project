@@ -3,11 +3,12 @@
 """
 from datetime import datetime
 
-from api.app import CASSANDRA_SESSION, KEY_SPACE, REDIS, ZK
+from api.app import CASSANDRA_SESSION, KEY_SPACE, ZK
 from api.models import Messages
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
 import asyncio
+import aioredis
 import logging
 
 log = logging.getLogger()
@@ -99,15 +100,25 @@ class RedisDatabaseManager:
     """
     Class that manage data in redis
     """
+    connection = None
 
     @classmethod
-    def redisget(cls):
-        result = REDIS.get('kafka')
+    async def connect(cls):
+        RedisDatabaseManager.connection = await aioredis.create_redis('redis://redis:6379', loop=asyncio.get_event_loop())
+
+    @classmethod
+    async def close(cls):
+        RedisDatabaseManager.connection.close()
+        await RedisDatabaseManager.connection.wait_closed()
+
+    @classmethod
+    async def redisget(cls):
+        result = await RedisDatabaseManager.connection.get('kafka')
         return result
 
     @classmethod
-    def redisset(cls, offset):
-        REDIS.set('kafka', offset)
+    async def redisset(cls, offset):
+        await RedisDatabaseManager.connection.set('kafka', offset)
 
 
 class ZookeeperDatabaseManager:
