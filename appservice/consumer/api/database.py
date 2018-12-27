@@ -3,16 +3,17 @@
 """
 from datetime import datetime
 
-from api.app import CASSANDRA_SESSION, KEY_SPACE, ZK
+from api.app import CASSANDRA_SESSION, KEY_SPACE
 from api.models import Messages
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
+from .logger_conf import make_logger
 import asyncio
 import aioredis
+import aiozk
 import logging
 
-log = logging.getLogger()
-log.setLevel('DEBUG')
+LOGGER = make_logger('logs/database_logs')
 
 
 class PostgresDatabaseManager:
@@ -32,7 +33,6 @@ class PostgresDatabaseManager:
     async def create(cls):
         engine = await PostgresDatabaseManager.create_engine()
         async with engine.acquire() as conn:
-            logging.critical('POSRTGTREEEDE')
             await conn.execute(CreateTable(Messages))
 
     @classmethod
@@ -57,7 +57,7 @@ class CassandraDatabaseManager:
     @classmethod
     def create_keyspace(cls):
         session = CASSANDRA_SESSION
-        log.info("creating keyspace...")
+        LOGGER.info("creating keyspace...")
         session.execute("""
                         CREATE KEYSPACE IF NOT EXISTS %s
                         WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '2' }
@@ -66,10 +66,9 @@ class CassandraDatabaseManager:
     @classmethod
     def create(cls):
         session = CASSANDRA_SESSION
-        log = logging.getLogger()
-        log.info("setting keyspace...")
+        LOGGER.info("setting keyspace...")
         session.set_keyspace(KEY_SPACE)
-        log.info("creating table...")
+        LOGGER.info("creating table...")
         session.execute("""
                         CREATE TABLE IF NOT EXISTS messages (
                             id text,
@@ -86,7 +85,7 @@ class CassandraDatabaseManager:
         try:
             session.execute_async("INSERT INTO messages (id, topic, message) VALUES (%s, %s, %s)", (id, topic, message)).result()
         except Exception as e:
-            log.error(e)
+            LOGGER.error(e)
 
     @classmethod
     async def select_count(cls):
@@ -125,8 +124,27 @@ class ZookeeperDatabaseManager:
     """
     Class that manage data in zookeeper
     """
+    connection = None
 
     @classmethod
-    def setdata(cls, data):
-        ZK.ensure_path("/my/offset")
-        ZK.set("/my/offset", str(data).encode('utf-8'))
+    async def connect(cls):
+        ZookeeperDatabaseManager.connection = aiozk.ZKClient('zookeeper:2181')
+        await ZookeeperDatabaseManager.connection.start()
+        try:
+            await ZookeeperDatabaseManager.connection.ensure_path('/offset')
+        except Exception as e:
+            LOGGER.error('Ensure path for ZK', e)
+            await ZookeeperDatabaseManager.connection.create('/offset', data=b'null', ephemeral=True)
+
+    @classmethod
+    async def close(cls):
+        await RedisDatabaseManager.connection.close()
+
+    @classmethod
+    async def setdata(cls, data):
+        await ZookeeperDatabaseManager.connection.set_data('offset', data.encode('utf-8'))
+
+    @classmethod
+    async def getdata(cls):
+        result = await ZookeeperDatabaseManager.connection.get_data('offset')
+        return result

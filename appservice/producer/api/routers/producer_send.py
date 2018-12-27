@@ -3,11 +3,9 @@ from api.app import APP
 from sanic.response import json
 import json as j
 import asyncio
-import logging
+from api.logger_conf import make_logger
 
-
-logging.basicConfig(filename='producer_logs.txt', level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+LOGGER = make_logger('logs/producer_logs')
 
 
 @APP.route("/producer", methods=['POST'])
@@ -18,7 +16,7 @@ async def producer(request):
     :return: json with message
     """
     data = request.json
-    logging.info(data)
+    LOGGER.info(data)
     topic = data['topic']
     key = data['key']
     value = data['value']
@@ -29,7 +27,7 @@ async def producer(request):
                                         value_serializer=lambda m: j.dumps(m).encode('utf-8'))
             break
         except Exception as e:
-            logging.info(e)
+            LOGGER.info(e)
             await asyncio.sleep(10)
     await producer.start()
     try:

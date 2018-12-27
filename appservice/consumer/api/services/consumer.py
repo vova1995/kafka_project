@@ -9,8 +9,10 @@ from aiokafka import AIOKafkaConsumer
 
 from api.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
     ZookeeperDatabaseManager
-from api.app import LOGGER
+from api.logger_conf import make_logger
 
+
+LOGGER = make_logger('logs/consumer_log')
 TOPIC = 'test_topic'
 PARTITION = 0
 GROUP = 'test_group'
@@ -75,7 +77,7 @@ class Consumer:
                                                       topic=msg.topic,
                                                       message=f'key={msg.key}, value={msg.value}')
                 await RedisDatabaseManager.redisset(msg.offset)
-                ZookeeperDatabaseManager.setdata(msg.offset)
+                await ZookeeperDatabaseManager.setdata(str(msg.offset))
         finally:
             await self.consumer.stop()
 

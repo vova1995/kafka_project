@@ -2,15 +2,12 @@
     Module for consumer routers
 """
 from sanic import response
-from sqlalchemy import func
-
-from api.app import APP, ZK
-from api.database import CassandraDatabaseManager, RedisDatabaseManager, PostgresDatabaseManager
-import logging
+from api.app import APP
+from api.database import CassandraDatabaseManager, RedisDatabaseManager, PostgresDatabaseManager, ZookeeperDatabaseManager
+from api.logger_conf import make_logger
 
 
-logging.basicConfig(filename='consumer_logs.txt', level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+LOGGER = make_logger('logs/consumer_get')
 
 
 @APP.route("/consumer_redis_offset", methods=['GET'])
@@ -21,7 +18,7 @@ async def redis_offset(request):
     :return: offset
     """
     offset = await RedisDatabaseManager.redisget()
-    logging.info(offset)
+    LOGGER.info(offset)
     return response.json({
         'offset': offset
     })
@@ -33,8 +30,8 @@ async def zk_offset(request):
     :param request:
     :return: offset
     """
-    offset, stat = ZK.get("my/offset")
-    logging.info(offset)
+    offset = await ZookeeperDatabaseManager.getdata()
+    LOGGER.info(offset)
     return response.json({
         'offset': offset
     })
@@ -48,7 +45,7 @@ async def postgres_count(request):
     :return:
     """
     rows = await PostgresDatabaseManager.select_count()
-    logging.info(rows)
+    LOGGER.info(rows)
     return response.json({
         'rows': rows
     })
@@ -62,8 +59,7 @@ async def cassandra_count(request):
     :return:
     """
     rows = await CassandraDatabaseManager.select_count()
-    logging.info(rows)
+    LOGGER.info(rows)
     return response.json({
         'rows': rows
     })
-
