@@ -3,8 +3,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 
-def make_logger(file_path):
-    logger = logging.getLogger('main')
+def make_logger(file_path, logger_name):
+    logger = logging.getLogger(logger_name)
 
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 

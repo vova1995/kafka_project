@@ -27,7 +27,7 @@ from common.database import PostgresDatabaseManager, CassandraDatabaseManager
 from common.zookeeper import ZookeeperDatabaseManager
 from common.redis import RedisDatabaseManager
 
-LOGGER = make_logger('logs/app_logs')
+LOGGER = make_logger('logs/app_logs', 'app_logs')
 
 
 @APP.listener('before_server_start')
@@ -46,7 +46,7 @@ async def setup(app, loop):
 async def notify_server_started(app, loop):
     from api.services import Consumer
     consumer = Consumer()
-    await consumer.listener()
+    await consumer.listen()
 
 
 @APP.listener('after_server_stop')

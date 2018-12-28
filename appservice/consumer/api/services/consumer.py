@@ -49,7 +49,7 @@ class Consumer:
                 LOGGER.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
                 asyncio.sleep(3)
 
-    async def listener(self):
+    async def listen(self):
         """
         listener that catches messages
          and either store in db or commit
