@@ -4,6 +4,7 @@
 import asyncio
 import json
 import time
+import uuid
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
 
@@ -14,7 +15,7 @@ from api.logger_conf import make_logger
 from api.config import Configs
 
 
-LOGGER = make_logger('logs/consumer_log')
+LOGGER = make_logger('logs/consumer_log', 'consumer_logs')
 TOPIC = 'test_topic'
 PARTITION = 0
 GROUP = 'test_group'
@@ -38,53 +39,61 @@ class Consumer:
         self.counter = 0
         self._uncommitted_messages = 0
         self._last_commit_time = None
+        self._commit_task: asyncio.Task = None
 
+    async def connect(self):
         while True:
             try:
-                self.consumer.start()
+                await self.consumer.start()
                 LOGGER.info("Connection with Kafka broker successfully established")
-                self.consumer.commit_task = asyncio.ensure_future(self.commit_every_10_seconds())
+                self._commit_task = asyncio.ensure_future(self.commit_every_10_seconds())
                 break
             except Exception as e:
                 LOGGER.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
-                asyncio.sleep(3)
+            await asyncio.sleep(3)
 
-    async def listener(self):
+    async def listen(self):
         """
         listener that catches messages
          and either store in db or commit
         :return:
         """
         try:
-            await self.consumer.start()
-
+            await self.connect()
             async for msg in self.consumer:
-                LOGGER.info(f'topic: {msg.topic} and value added to database, offset {msg.offset}, value={msg.value}')
+                LOGGER.info(f'topic: {msg.topic} and value that will be added to database, offset {msg.offset}, value={msg.value}')
                 self._uncommitted_messages += 1
                 LOGGER.info('Uncommited message = %s', self._uncommitted_messages)
                 self.counter += 1
                 LOGGER.info('Counter = %s', self.counter)
 
                 if self.counter >= 10:
-                    self.consumer.commit()
+                    await self.consumer.commit()
                     self._uncommitted_messages = 0
                     self.counter = 0
                     LOGGER.info("Commit every 10 messages")
-                # if Configs['OFFSET_STORAGE'] == 'REDIS' and Configs['DATA_STORAGE'] == 'POSTGRES':
-                LOGGER.info(Configs['OFFSET_STORAGE'])
-                LOGGER.info(Configs['DATA_STORAGE'])
-                await PostgresDatabaseManager.insert(topic=str(msg.topic),
-                                                     message=f'key={msg.key}, value={msg.value}')
-                await RedisDatabaseManager.redisset('kafka', msg.offset)
-                # else:
-                LOGGER.info(Configs['OFFSET_STORAGE'])
-                LOGGER.info(Configs['DATA_STORAGE'])
-                await CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
-                                                      topic=msg.topic,
-                                                      message=f'key={msg.key}, value={msg.value}')
-                await ZookeeperDatabaseManager.setdata('offset', str(msg.offset))
+                await self.write_to_db(id=uuid.uuid4(), topic=str(msg.topic), message=f'key={msg.key}, value={msg.value}', offset=str(msg.offset))
+        except Exception as e:
+            LOGGER.error('Listener error: ', e)
+            self.connect()
         finally:
             await self.consumer.stop()
+
+    async def write_to_db(self, id, topic, message, offset):
+        try:
+            if Configs['DATA_STORAGE'] == 'POSTGRES':
+                await PostgresDatabaseManager.insert(topic,
+                                            message)
+            if Configs['DATA_STORAGE'] == 'CASSANDRA':
+                await CassandraDatabaseManager.insert(id,
+                                                topic,
+                                                message)
+            if Configs['OFFSET_STORAGE'] == 'REDIS':
+                await RedisDatabaseManager.set('kafka', offset)
+            if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
+                await ZookeeperDatabaseManager.set('offset', offset)
+        except Exception as e:
+            LOGGER.error('Databases', e)
 
     async def commit_every_10_seconds(self):
         """

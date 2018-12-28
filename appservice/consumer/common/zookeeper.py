@@ -3,7 +3,7 @@ from api.config import Configs
 
 import aiozk
 
-LOGGER = make_logger('logs/database_logs')
+LOGGER = make_logger('logs/database_logs', 'database_logs')
 
 
 class ZookeeperDatabaseManager:
@@ -27,10 +27,10 @@ class ZookeeperDatabaseManager:
         await cls._connection.close()
 
     @classmethod
-    async def setdata(cls, path, data):
+    async def set(cls, path, data):
         await cls._connection.set_data('offset', data.encode('utf-8'))
 
     @classmethod
-    async def getdata(cls, path):
+    async def get(cls, path):
         result = await cls._connection.get_data('offset')
         return result

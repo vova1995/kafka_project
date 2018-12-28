@@ -7,9 +7,10 @@ from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
 from api.logger_conf import make_logger
 from api.config import Configs
+import uuid
 
 
-LOGGER = make_logger('logs/database_logs')
+LOGGER = make_logger('logs/database_logs', 'database_logs')
 
 
 class PostgresDatabaseManager:
@@ -68,7 +69,7 @@ class CassandraDatabaseManager:
         try:
             cls._session.execute_async("""
                             CREATE TABLE IF NOT EXISTS messages (
-                                id text,
+                                id UUID,
                                 topic text,
                                 message text,
                             PRIMARY KEY (id)

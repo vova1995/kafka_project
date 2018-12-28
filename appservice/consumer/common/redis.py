@@ -3,7 +3,7 @@ from api.logger_conf import make_logger
 import aioredis
 import asyncio
 
-LOGGER = make_logger('logs/database_logs')
+LOGGER = make_logger('logs/database_logs', 'database_logs')
 
 
 class RedisDatabaseManager:
@@ -23,10 +23,10 @@ class RedisDatabaseManager:
         await cls._connection.wait_closed()
 
     @classmethod
-    async def redisget(cls, key):
+    async def get(cls, key):
         result = await cls._connection.get(key)
         return result
 
     @classmethod
-    async def redisset(cls, key, offset):
+    async def set(cls, key, offset):
         await cls._connection.set(key, offset)
