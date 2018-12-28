@@ -3,7 +3,9 @@
 """
 from sanic import response
 from api.app import APP
-from api.database import CassandraDatabaseManager, RedisDatabaseManager, PostgresDatabaseManager, ZookeeperDatabaseManager
+from common.database import CassandraDatabaseManager, PostgresDatabaseManager
+from common.redis import RedisDatabaseManager
+from common.zookeeper import ZookeeperDatabaseManager
 from api.logger_conf import make_logger
 
 
@@ -17,7 +19,7 @@ async def redis_offset(request):
     :param request:
     :return: offset
     """
-    offset = await RedisDatabaseManager.redisget()
+    offset = await RedisDatabaseManager.redisget('kafka')
     LOGGER.info(offset)
     return response.json({
         'offset': offset
@@ -30,7 +32,7 @@ async def zk_offset(request):
     :param request:
     :return: offset
     """
-    offset = await ZookeeperDatabaseManager.getdata()
+    offset = await ZookeeperDatabaseManager.getdata('/offset')
     LOGGER.info(offset)
     return response.json({
         'offset': offset

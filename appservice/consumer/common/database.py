@@ -1,18 +1,13 @@
 """
     Module for databases actions
 """
-from datetime import datetime
-
 from api.app import CASSANDRA_SESSION, KEY_SPACE
 from api.models import Messages
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
-from .logger_conf import make_logger
+from api.logger_conf import make_logger
 from api.config import Configs
-import asyncio
-import aioredis
-import aiozk
-import logging
+
 
 LOGGER = make_logger('logs/database_logs')
 
@@ -55,97 +50,44 @@ class CassandraDatabaseManager:
     Class that manage data in cassandra
     """
 
+    _session = CASSANDRA_SESSION
+
     @classmethod
     def create_keyspace(cls):
-        session = CASSANDRA_SESSION
         LOGGER.info("creating keyspace...")
-        session.execute("""
+        cls._session.execute("""
                         CREATE KEYSPACE IF NOT EXISTS %s
                         WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '2' }
                         """ % KEY_SPACE)
 
     @classmethod
-    def create(cls):
-        session = CASSANDRA_SESSION
+    async def create(cls):
         LOGGER.info("setting keyspace...")
-        session.set_keyspace(KEY_SPACE)
+        cls._session.set_keyspace(KEY_SPACE)
         LOGGER.info("creating table...")
-        session.execute("""
-                        CREATE TABLE IF NOT EXISTS messages (
-                            id text,
-                            topic text,
-                            message text,
-                        PRIMARY KEY (id)
-                      )
-                        """)
+        try:
+            cls._session.execute_async("""
+                            CREATE TABLE IF NOT EXISTS messages (
+                                id text,
+                                topic text,
+                                message text,
+                            PRIMARY KEY (id)
+                          )
+                            """)
+        except Exception as e:
+            LOGGER.error(e)
 
     @classmethod
     async def insert(cls, id, topic, message):
-        session = CASSANDRA_SESSION
-        session.set_keyspace(KEY_SPACE)
+        cls._session.set_keyspace(KEY_SPACE)
         try:
-            session.execute_async("INSERT INTO messages (id, topic, message) VALUES (%s, %s, %s)", (id, topic, message)).result()
+            cls._session.execute_async("INSERT INTO messages (id, topic, message) VALUES (%s, %s, %s)",
+                                       (id, topic, message)).result()
         except Exception as e:
             LOGGER.error(e)
 
     @classmethod
     async def select_count(cls):
-        session = CASSANDRA_SESSION
-        session.set_keyspace(KEY_SPACE)
-        res = session.execute_async("SELECT COUNT(*) FROM messages").result()
+        cls._session.set_keyspace(KEY_SPACE)
+        res = cls._session.execute_async("SELECT COUNT(*) FROM messages").result()
         return res
-
-
-class RedisDatabaseManager:
-    """
-    Class that manage data in redis
-    """
-    connection = None
-
-    @classmethod
-    async def connect(cls):
-        RedisDatabaseManager.connection = await aioredis.create_redis(f"redis://{Configs['REDIS_HOST']}:{Configs['REDIS_PORT']}", loop=asyncio.get_event_loop())
-
-    @classmethod
-    async def close(cls):
-        RedisDatabaseManager.connection.close()
-        await RedisDatabaseManager.connection.wait_closed()
-
-    @classmethod
-    async def redisget(cls):
-        result = await RedisDatabaseManager.connection.get('kafka')
-        return result
-
-    @classmethod
-    async def redisset(cls, offset):
-        await RedisDatabaseManager.connection.set('kafka', offset)
-
-
-class ZookeeperDatabaseManager:
-    """
-    Class that manage data in zookeeper
-    """
-    connection = None
-
-    @classmethod
-    async def connect(cls):
-        ZookeeperDatabaseManager.connection = aiozk.ZKClient(f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
-        await ZookeeperDatabaseManager.connection.start()
-        try:
-            await ZookeeperDatabaseManager.connection.ensure_path('/offset')
-        except Exception as e:
-            LOGGER.error('Ensure path for ZK', e)
-            await ZookeeperDatabaseManager.connection.create('/offset', data=b'null', ephemeral=True)
-
-    @classmethod
-    async def close(cls):
-        await RedisDatabaseManager.connection.close()
-
-    @classmethod
-    async def setdata(cls, data):
-        await ZookeeperDatabaseManager.connection.set_data('offset', data.encode('utf-8'))
-
-    @classmethod
-    async def getdata(cls):
-        result = await ZookeeperDatabaseManager.connection.get_data('offset')
-        return result

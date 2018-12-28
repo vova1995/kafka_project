@@ -7,8 +7,9 @@ import time
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
 
-from api.database import PostgresDatabaseManager, CassandraDatabaseManager, RedisDatabaseManager, \
-    ZookeeperDatabaseManager
+from common.database import PostgresDatabaseManager, CassandraDatabaseManager
+from common.redis import RedisDatabaseManager
+from common.zookeeper import ZookeeperDatabaseManager
 from api.logger_conf import make_logger
 from api.config import Configs
 
@@ -69,19 +70,19 @@ class Consumer:
                     self._uncommitted_messages = 0
                     self.counter = 0
                     LOGGER.info("Commit every 10 messages")
-                if Configs['OFFSET_STORAGE'] == 'REDIS' and Configs['DATA_STORAGE'] == 'POSTGRES':
-                    LOGGER.info(Configs['OFFSET_STORAGE'])
-                    LOGGER.info(Configs['DATA_STORAGE'])
-                    await PostgresDatabaseManager.insert(topic=str(msg.topic),
-                                                         message=f'key={msg.key}, value={msg.value}')
-                    await RedisDatabaseManager.redisset(msg.offset)
-                else:
-                    LOGGER.info(Configs['OFFSET_STORAGE'])
-                    LOGGER.info(Configs['DATA_STORAGE'])
-                    await CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
-                                                          topic=msg.topic,
-                                                          message=f'key={msg.key}, value={msg.value}')
-                    await ZookeeperDatabaseManager.setdata(str(msg.offset))
+                # if Configs['OFFSET_STORAGE'] == 'REDIS' and Configs['DATA_STORAGE'] == 'POSTGRES':
+                LOGGER.info(Configs['OFFSET_STORAGE'])
+                LOGGER.info(Configs['DATA_STORAGE'])
+                await PostgresDatabaseManager.insert(topic=str(msg.topic),
+                                                     message=f'key={msg.key}, value={msg.value}')
+                await RedisDatabaseManager.redisset('kafka', msg.offset)
+                # else:
+                LOGGER.info(Configs['OFFSET_STORAGE'])
+                LOGGER.info(Configs['DATA_STORAGE'])
+                await CassandraDatabaseManager.insert(id=str(datetime.utcnow()),
+                                                      topic=msg.topic,
+                                                      message=f'key={msg.key}, value={msg.value}')
+                await ZookeeperDatabaseManager.setdata('offset', str(msg.offset))
         finally:
             await self.consumer.stop()
 
