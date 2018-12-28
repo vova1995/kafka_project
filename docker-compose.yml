@@ -36,6 +36,8 @@ services:
     build:
        context: appservice/producer
        dockerfile: Dockerfile
+    environment:
+      DOCKER: 1
     volumes:
       - ./appservice:/appservice
     ports:
@@ -45,13 +47,17 @@ services:
       - postgres
       - zookeeper
       - redis
-    entrypoint: ["python3.6", "/appservice/producer/run.py"]
+    entrypoint: 'python3 -u /appservice/producer/manage.py'
   consumer:
     restart: always
     container_name: appserive_consumer
     build:
        context: appservice/consumer
        dockerfile: Dockerfile
+    environment:
+      DOCKER: 1
+      DATA_STORAGE: POSTGRES
+      OFFSET_STORAGE: REDIS
     volumes:
       - ./appservice:/appservice
     ports:
@@ -62,7 +68,7 @@ services:
       - zookeeper
       - redis
       - cassandra
-    entrypoint: ["python3.6", "/appservice/consumer/run.py"]
+    entrypoint: 'python3 -u /appservice/consumer/manage.py'
   redis:
     image: "redis"
     container_name: appserive_redis

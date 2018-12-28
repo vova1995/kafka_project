@@ -8,6 +8,7 @@ from api.models import Messages
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
 from .logger_conf import make_logger
+from api.config import Configs
 import asyncio
 import aioredis
 import aiozk
@@ -23,10 +24,10 @@ class PostgresDatabaseManager:
 
     @classmethod
     async def create_engine(cls):
-        engine = await create_engine(user='appservice',
-                                     database='appservice',
-                                     host='postgres',
-                                     password='appservice')
+        engine = await create_engine(user=Configs['POSTGRES_USER'],
+                                     database=Configs['POSTGRES_DATABASE'],
+                                     host=Configs['POSTGRES_ADDRESS'],
+                                     password=Configs['POSTGRES_PASSWORD'])
         return engine
 
     @classmethod
@@ -103,7 +104,7 @@ class RedisDatabaseManager:
 
     @classmethod
     async def connect(cls):
-        RedisDatabaseManager.connection = await aioredis.create_redis('redis://redis:6379', loop=asyncio.get_event_loop())
+        RedisDatabaseManager.connection = await aioredis.create_redis(f"redis://{Configs['REDIS_HOST']}:{Configs['REDIS_PORT']}", loop=asyncio.get_event_loop())
 
     @classmethod
     async def close(cls):
@@ -128,7 +129,7 @@ class ZookeeperDatabaseManager:
 
     @classmethod
     async def connect(cls):
-        ZookeeperDatabaseManager.connection = aiozk.ZKClient('zookeeper:2181')
+        ZookeeperDatabaseManager.connection = aiozk.ZKClient(f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
         await ZookeeperDatabaseManager.connection.start()
         try:
             await ZookeeperDatabaseManager.connection.ensure_path('/offset')

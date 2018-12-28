@@ -3,14 +3,13 @@
 """
 from cassandra.cluster import Cluster
 from sanic import Sanic
-from .config import Config
 from .logger_conf import make_logger
 import logging
+from .config import Configs
 
 APP = Sanic()
-APP.config.from_object(Config)
 
-CLUSTER = Cluster(["cassandra"])
+CLUSTER = Cluster([Configs['CASSANDRA_HOST']])
 
 KEY_SPACE = 'messages'
 

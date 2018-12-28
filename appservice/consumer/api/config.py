@@ -6,22 +6,35 @@ import os
 BASEDIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
 
-IS_IN_DOCKER = os.environ.get('DOCKER', False)
+docker = os.environ.get('DOCKER', None)
 
 
-class Config:
-    """
-    Configuration class to configure APP from object
-    """
-    SECRET_KEY = 'this-really-needs-to-be-changed'
-    SECURITY_PASSWORD_SALT = 'my_precious_two'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+Configs = {
+    'POSTGRES_USER': os.environ.get('POSTGRES_USER') or 'appservice',
+    'POSTGRES_PASSWORD': os.environ.get('POSTGRES_PASSWORD') or 'appservice',
+    'POSTGRES_DATABASE': os.environ.get('POSTGRES_DATABASE') or 'appservice',
+    'POSTGRES_PORT': os.environ.get('POSTGRES_PORT') or 5432,
+    'KAFKA_PORT': os.environ.get('KAFKA_PORT') or 9092,
+    'ZOOKEEPER_PORT': os.environ.get('ZOOKEEPER_PORT') or 2181,
+    'REDIS_PORT': os.environ.get('REDIS_PORT') or 6379,
+    'OFFSET_STORAGE': os.environ.get('OFFSET_STORAGE') or 'ZOOKEEPER',
+    'DATA_STORAGE': os.environ.get('DATA_STORAGE') or 'CASSANDRA',
+}
 
-    SQLALCHEMY_DATABASE_URI = "postgresql://appservice:appservice@localhost:5432/appservice"
+if not docker:
+    Configs.update({
+        'POSTGRES_ADDRESS': os.environ.get('POSTGRES_ADDRESS') or 'localhost',
+        'KAFKA_ADDRESS': os.environ.get('KAFKA_SERVERS') or 'localhost',
+        'ZOOKEEPER_HOST': os.environ.get('ZOOKEEPER_HOST') or 'localhost',
+        'REDIS_HOST': os.environ.get('ZOOKEEPER_HOST') or 'localhost',
+        'CASSANDRA_HOST': os.environ.get('CASSANDRA_HOST') or 'localhost',
 
-    REDIS_PORT = 6379
-
-    if IS_IN_DOCKER:
-        REDIS_URL = 'appserive_redis'
-    else:
-        REDIS_URL = 'redis'
+    })
+else:
+    Configs.update({
+        'POSTGRES_ADDRESS': os.environ.get('POSTGRES_ADDRESS') or 'postgres',
+        'KAFKA_ADDRESS': os.environ.get('KAFKA_SERVERS') or 'kafka',
+        'ZOOKEEPER_HOST': os.environ.get('ZOOKEEPER_HOST') or 'zookeeper',
+        'REDIS_HOST': os.environ.get('REDIS_HOST') or 'redis',
+        'CASSANDRA_HOST': os.environ.get('CASSANDRA_HOST') or 'cassandra',
+    })

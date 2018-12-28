@@ -55,6 +55,14 @@ sudo docker exec -it <container name> cqlsh
 SELECT * FROM messages.messages;
 
 ```
+### Docker container usage
+In order to write into cassandra and zookeeper you need to change in docker-compose file environments to CASSANDRA and ZOOKEEPER
+```
+environment:
+      DOCKER: 1
+      DATA_STORAGE: CASSANDRA
+      OFFSET_STORAGE: ZOOKEEPER
+```
 ### Testing
 In order to check test please navigate to the folder tests and do following
 ```

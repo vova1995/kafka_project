@@ -4,6 +4,7 @@ from sanic.response import json
 import json as j
 import asyncio
 from api.logger_conf import make_logger
+from api.config import Configs
 
 LOGGER = make_logger('logs/producer_logs')
 
