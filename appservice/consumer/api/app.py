@@ -3,24 +3,14 @@
 """
 import time
 
-from cassandra.cluster import Cluster
 from sanic import Sanic
 from .logger_conf import make_logger
 from .config import Configs, CONSUMER_LOG_FILE_PATH
 
 APP = Sanic()
 
-CLUSTER = Cluster([Configs['CASSANDRA_HOST']])
-
-KEY_SPACE = 'messages'
-
 LOGGER = make_logger(CONSUMER_LOG_FILE_PATH, 'consumer_logger')
 
-
-while True:
-    time.sleep(25)
-    CASSANDRA_SESSION = CLUSTER.connect()
-    break
 
 
 
@@ -40,22 +30,23 @@ async def setup(app, loop):
     :param loop:
     :return:
     """
-    LOGGER.info(Configs['DATA_STORAGE'])
-    LOGGER.info(Configs['OFFSET_STORAGE'])
-    LOGGER.info(Configs['OFFSET_STORAGE'] == 'REDIS')
     try:
         if Configs['DATA_STORAGE'] == 'POSTGRES':
             await PostgresDatabaseManager.create()
-        if Configs['DATA_STORAGE'] == 'CASSANDRA':
-            CassandraDatabaseManager.create_keyspace()
+            LOGGER.info('Postgres started working')
+        else:
             await CassandraDatabaseManager.create()
+            LOGGER.info('Cassandra started working')
     except Exception as e:
         LOGGER.error('Databases sql error %s', e)
     try:
         if Configs['OFFSET_STORAGE'] == 'REDIS':
             await RedisDatabaseManager.connect()
-        if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
-            await ZookeeperDatabaseManager.connect('/offset')
+            LOGGER.info('Redis started working')
+        else:
+            await ZookeeperDatabaseManager.connect()
+            await ZookeeperDatabaseManager.ensure_or_create('/offset')
+            LOGGER.info('Zookeeper is connected')
     except Exception as e:
         LOGGER.error('Databases no sql error %s', e)
 
@@ -69,7 +60,9 @@ async def notify_server_started(app, loop):
     :return:
     """
     from api.services import Consumer
-    await Consumer.listen()
+    import asyncio
+    APP.add_task(asyncio.ensure_future(Consumer.listen()))
+    LOGGER.info('Consumer started working')
 
 
 @APP.listener('after_server_stop')
@@ -80,5 +73,10 @@ async def close_db(app, loop):
     :param loop:
     :return:
     """
-    await RedisDatabaseManager.close()
-    await ZookeeperDatabaseManager.close()
+    try:
+        if Configs['OFFSET_STORAGE'] == 'REDIS':
+            await RedisDatabaseManager.close()
+        else:
+            await ZookeeperDatabaseManager.close()
+    except Exception as e:
+        LOGGER.error('No sql database error %s', e)

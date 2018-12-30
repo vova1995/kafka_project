@@ -20,9 +20,15 @@ class RedisDatabaseManager:
         Method connects to redis
         :return:
         """
-        cls._connection = await aioredis.create_redis(f"redis://{Configs['REDIS_HOST']}:"
-                                                      f"{Configs['REDIS_PORT']}",
-                                                      loop=asyncio.get_event_loop())
+        while True:
+            try:
+                cls._connection = await aioredis.create_redis(f"redis://{Configs['REDIS_HOST']}:"
+                                                              f"{Configs['REDIS_PORT']}",
+                                                              loop=asyncio.get_event_loop())
+                break
+            except Exception as e:
+                LOGGER.error('Issue with redis connection %s and try reconnect every 3 sec ', e)
+                await asyncio.sleep(3)
 
     @classmethod
     async def close(cls):
@@ -38,10 +44,9 @@ class RedisDatabaseManager:
         """
         Method gets data from redis
         :param key:
-        :return:
+        :return: offset
         """
-        result = await cls._connection.get(key)
-        return result
+        return await cls._connection.get(key)
 
     @classmethod
     async def set(cls, key, offset):
