@@ -38,10 +38,9 @@ class RedisDatabaseManager:
         """
         Method gets data from redis
         :param key:
-        :return:
+        :return: offset
         """
-        result = await cls._connection.get(key)
-        return result
+        return await cls._connection.get(key)
 
     @classmethod
     async def set(cls, key, offset):

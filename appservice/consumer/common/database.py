@@ -2,12 +2,14 @@
     Module for databases actions
 """
 import uuid
+import time
 
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
-from api.app import CASSANDRA_SESSION, KEY_SPACE, LOGGER
+from api.app import LOGGER
 from api.models import Messages
-from api.config import Configs
+from api.config import Configs, KEY_SPACE
+from cassandra.cluster import Cluster
 
 
 class PostgresDatabaseManager:
@@ -33,7 +35,7 @@ class PostgresDatabaseManager:
         Method creates database
         :return:
         """
-        engine = await PostgresDatabaseManager.create_engine()
+        engine = await cls.create_engine()
         async with engine.acquire() as conn:
             await conn.execute(CreateTable(Messages))
 
@@ -45,7 +47,7 @@ class PostgresDatabaseManager:
         :param message:
         :return:
         """
-        engine = await PostgresDatabaseManager.create_engine()
+        engine = await cls.create_engine()
         async with engine.acquire() as conn:
             await conn.execute(Messages.insert().values(topic=topic, message=message))
 
@@ -55,7 +57,7 @@ class PostgresDatabaseManager:
         Method counts rows in postgres
         :return: rows
         """
-        engine = await PostgresDatabaseManager.create_engine()
+        engine = await cls.create_engine()
         async with engine.acquire() as conn:
             async with conn.execute(Messages.select()) as cur:
                 return cur.rowcount
@@ -65,8 +67,15 @@ class CassandraDatabaseManager:
     """
     Class that manage data in cassandra
     """
-
-    _session = CASSANDRA_SESSION
+    while True:
+        try:
+            CLUSTER = Cluster([Configs['CASSANDRA_HOST']])
+            _session = CLUSTER.connect()
+            LOGGER.info('Cassandra successfully connect to server %s', Configs['CASSANDRA_HOST'])
+            break
+        except Exception as e:
+            LOGGER.error('Cassandra cluser %s and try reconnect every 3 sec', e)
+            time.sleep(3)
 
     @classmethod
     def create_keyspace(cls):
@@ -75,10 +84,13 @@ class CassandraDatabaseManager:
         :return:
         """
         LOGGER.info("creating keyspace...")
-        cls._session.execute("""
-                        CREATE KEYSPACE IF NOT EXISTS %s
-                        WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '2' }
-                        """ % KEY_SPACE)
+        try:
+            cls._session.execute_async("""
+                            CREATE KEYSPACE IF NOT EXISTS %s
+                            WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '2' }
+                            """ % KEY_SPACE)
+        except Exception as e:
+            LOGGER.error('Error occured when tried to create keyspace %s: %s ', KEY_SPACE, e)
 
     @classmethod
     async def create(cls):
@@ -87,6 +99,7 @@ class CassandraDatabaseManager:
         :return:
         """
         LOGGER.info("setting keyspace...")
+        cls.create_keyspace()
         cls._session.set_keyspace(KEY_SPACE)
         LOGGER.info("creating table...")
         try:

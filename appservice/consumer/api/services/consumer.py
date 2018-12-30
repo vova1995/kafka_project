@@ -93,7 +93,7 @@ class Consumer:
             if Configs['OFFSET_STORAGE'] == 'REDIS':
                 await RedisDatabaseManager.set('kafka', offset)
             if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
-                await ZookeeperDatabaseManager.set('offset', offset)
+                await ZookeeperDatabaseManager.set('/offset', offset)
         except Exception as e:
             LOGGER.error('Databases %s', e)
 
