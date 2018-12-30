@@ -5,6 +5,7 @@ from api.app import LOGGER
 from api.config import Configs
 
 import aiozk
+import asyncio
 
 
 class ZookeeperDatabaseManager:
@@ -22,7 +23,13 @@ class ZookeeperDatabaseManager:
         """
         LOGGER.info(f'Create connection with zookeeper host %s and port %s', Configs['ZOOKEEPER_HOST'], Configs['ZOOKEEPER_PORT'])
         cls._connection = aiozk.ZKClient(f"{Configs['ZOOKEEPER_HOST']}:{Configs['ZOOKEEPER_PORT']}")
-        await cls._connection.start()
+        while True:
+            try:
+                await cls._connection.start()
+                break
+            except Exception as e:
+                LOGGER.error('Issue with zookeeper connection %s and try reconnect every 3 sec', e)
+                await asyncio.sleep(3)
 
     @classmethod
     async def ensure_or_create(cls, path):

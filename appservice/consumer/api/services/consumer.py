@@ -100,22 +100,9 @@ class Consumer:
     @classmethod
     async def commit_every_10_seconds(cls):
         """
-        Method that commits message very 10 seconds
+        Method commits messages every 10 seconds if messages
         :return:
         """
-        # if cls._last_commit_time is None:
-        #     cls._last_commit_time = time.time()
-        # while True:
-        #     passed_time = time.time() - cls._last_commit_time
-        #     if passed_time < 10:
-        #         await asyncio.sleep(10 - passed_time)
-        #         if time.time() - cls._last_commit_time < 10:
-        #             continue
-        #     if cls._counter > 0:
-        #         await cls._consumer.commit()
-        #         LOGGER.info("Every 10 seconds commit")
-        #         cls._counter = 0
-        #     cls._last_commit_time = time.time()
         while True:
             await asyncio.sleep(10)
             if cls._counter > 0:
