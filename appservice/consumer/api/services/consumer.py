@@ -7,10 +7,6 @@ import time
 import uuid
 from datetime import datetime
 from aiokafka import AIOKafkaConsumer
-
-from common.database import PostgresDatabaseManager, CassandraDatabaseManager
-from common.redis import RedisDatabaseManager
-from common.zookeeper import ZookeeperDatabaseManager
 from api.app import LOGGER
 from api.config import Configs
 
@@ -84,15 +80,23 @@ class Consumer:
     async def write_to_db(cls, id, topic, message, offset):
         try:
             if Configs['DATA_STORAGE'] == 'POSTGRES':
+                from common.database import PostgresDatabaseManager
+
                 await PostgresDatabaseManager.insert(topic,
                                                      message)
             if Configs['DATA_STORAGE'] == 'CASSANDRA':
+                from common.database import CassandraDatabaseManager
+
                 await CassandraDatabaseManager.insert(id,
                                                       topic,
                                                       message)
             if Configs['OFFSET_STORAGE'] == 'REDIS':
+                from common.redis import RedisDatabaseManager
+
                 await RedisDatabaseManager.set('kafka', offset)
             if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
+                from common.zookeeper import ZookeeperDatabaseManager
+
                 await ZookeeperDatabaseManager.set('/offset', offset)
         except Exception as e:
             LOGGER.error('Databases %s', e)

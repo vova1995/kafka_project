@@ -33,16 +33,20 @@ async def setup(app, loop):
     try:
         if Configs['DATA_STORAGE'] == 'POSTGRES':
             await PostgresDatabaseManager.create()
+            LOGGER.info('Postgres started working')
         if Configs['DATA_STORAGE'] == 'CASSANDRA':
             await CassandraDatabaseManager.create()
+            LOGGER.info('Cassandra started working')
     except Exception as e:
         LOGGER.error('Databases sql error %s', e)
     try:
         if Configs['OFFSET_STORAGE'] == 'REDIS':
             await RedisDatabaseManager.connect()
+            LOGGER.info('Redis started working')
         if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
             await ZookeeperDatabaseManager.connect()
             await ZookeeperDatabaseManager.ensure_or_create('/offset')
+            LOGGER.info('Zookeeper is connected')
     except Exception as e:
         LOGGER.error('Databases no sql error %s', e)
 
@@ -56,7 +60,9 @@ async def notify_server_started(app, loop):
     :return:
     """
     from api.services import Consumer
-    await Consumer.listen()
+    import asyncio
+    APP.add_task(asyncio.ensure_future(Consumer.listen()))
+    LOGGER.info('Consumer started working')
 
 
 @APP.listener('after_server_stop')
@@ -67,5 +73,10 @@ async def close_db(app, loop):
     :param loop:
     :return:
     """
-    await RedisDatabaseManager.close()
-    await ZookeeperDatabaseManager.close()
+    try:
+        if Configs['OFFSET_STORAGE'] == 'REDIS':
+            await RedisDatabaseManager.close()
+        if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
+            await ZookeeperDatabaseManager.close()
+    except Exception as e:
+        LOGGER.error('No sql database error %s', e)
