@@ -6,11 +6,8 @@ from api.app import APP
 from common.database import CassandraDatabaseManager, PostgresDatabaseManager
 from common.redis import RedisDatabaseManager
 from common.zookeeper import ZookeeperDatabaseManager
-from api.logger_conf import make_logger
+from api.app import LOGGER
 from api.config import Configs
-
-
-LOGGER = make_logger('logs/consumer_get', 'consumer_get')
 
 
 @APP.route("/consumer_offset", methods=['GET'])

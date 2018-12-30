@@ -4,11 +4,8 @@ import asyncio
 from aiokafka import AIOKafkaProducer
 from sanic.response import json
 from api.app import APP
-from api.logger_conf import make_logger
+from api.app import LOGGER
 from api.config import Configs
-
-
-LOGGER = make_logger('logs/producer_logs', 'producer_logs')
 
 
 @APP.route("/producer", methods=['POST'])

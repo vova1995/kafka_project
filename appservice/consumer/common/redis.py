@@ -5,10 +5,7 @@ import asyncio
 import aioredis
 
 from api.config import Configs
-from api.logger_conf import make_logger
-
-
-LOGGER = make_logger('logs/database_logs', 'database_logs')
+from api.app import LOGGER
 
 
 class RedisDatabaseManager:

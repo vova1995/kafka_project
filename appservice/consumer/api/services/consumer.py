@@ -11,10 +11,9 @@ from aiokafka import AIOKafkaConsumer
 from common.database import PostgresDatabaseManager, CassandraDatabaseManager
 from common.redis import RedisDatabaseManager
 from common.zookeeper import ZookeeperDatabaseManager
-from api.app import make_logger
+from api.app import LOGGER
 from api.config import Configs
 
-LOGGER = make_logger('logs/consumer_log', 'consumer_logs')
 TOPIC = 'test_topic'
 PARTITION = 0
 GROUP = 'test_group'

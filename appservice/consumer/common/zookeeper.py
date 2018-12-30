@@ -1,12 +1,10 @@
 """
 Zookeeper manager module
 """
-from api.logger_conf import make_logger
+from api.app import LOGGER
 from api.config import Configs
 
 import aiozk
-
-LOGGER = make_logger('logs/database_logs', 'database_logs')
 
 
 class ZookeeperDatabaseManager:

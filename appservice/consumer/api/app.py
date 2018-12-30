@@ -6,13 +6,16 @@ import time
 from cassandra.cluster import Cluster
 from sanic import Sanic
 from .logger_conf import make_logger
-from .config import Configs
+from .config import Configs, CONSUMER_LOG_FILE_PATH
 
 APP = Sanic()
 
 CLUSTER = Cluster([Configs['CASSANDRA_HOST']])
 
 KEY_SPACE = 'messages'
+
+LOGGER = make_logger(CONSUMER_LOG_FILE_PATH, 'consumer_logger')
+
 
 while True:
     time.sleep(25)
@@ -28,8 +31,6 @@ from common.database import PostgresDatabaseManager, CassandraDatabaseManager
 from common.zookeeper import ZookeeperDatabaseManager
 from common.redis import RedisDatabaseManager
 
-LOGGER = make_logger('logs/app_logs', 'app_logs')
-
 
 @APP.listener('before_server_start')
 async def setup(app, loop):
@@ -39,14 +40,24 @@ async def setup(app, loop):
     :param loop:
     :return:
     """
+    LOGGER.info(Configs['DATA_STORAGE'])
+    LOGGER.info(Configs['OFFSET_STORAGE'])
+    LOGGER.info(Configs['OFFSET_STORAGE'] == 'REDIS')
     try:
-        await PostgresDatabaseManager.create()
+        if Configs['DATA_STORAGE'] == 'POSTGRES':
+            await PostgresDatabaseManager.create()
+        if Configs['DATA_STORAGE'] == 'CASSANDRA':
+            CassandraDatabaseManager.create_keyspace()
+            await CassandraDatabaseManager.create()
     except Exception as e:
-        LOGGER.info(e)
-    CassandraDatabaseManager.create_keyspace()
-    await CassandraDatabaseManager.create()
-    await RedisDatabaseManager.connect()
-    await ZookeeperDatabaseManager.connect('/offset')
+        LOGGER.error('Databases sql error %s', e)
+    try:
+        if Configs['OFFSET_STORAGE'] == 'REDIS':
+            await RedisDatabaseManager.connect()
+        if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
+            await ZookeeperDatabaseManager.connect('/offset')
+    except Exception as e:
+        LOGGER.error('Databases no sql error %s', e)
 
 
 @APP.listener('after_server_start')

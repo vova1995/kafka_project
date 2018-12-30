@@ -4,6 +4,7 @@ Configuration module for APP
 import os
 
 BASEDIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+CONSUMER_LOG_FILE_PATH = os.path.join(BASEDIR, "logs/consumer_logs.txt")
 
 
 docker = os.environ.get('DOCKER', None)

@@ -5,13 +5,9 @@ import uuid
 
 from aiopg.sa import create_engine
 from sqlalchemy.sql.ddl import CreateTable
-from api.app import CASSANDRA_SESSION, KEY_SPACE
+from api.app import CASSANDRA_SESSION, KEY_SPACE, LOGGER
 from api.models import Messages
-from api.logger_conf import make_logger
 from api.config import Configs
-
-
-LOGGER = make_logger('logs/database_logs', 'database_logs')
 
 
 class PostgresDatabaseManager:
