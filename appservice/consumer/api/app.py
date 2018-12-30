@@ -1,11 +1,12 @@
 """
     Module with main configs of project consumer
 """
+import time
+
 from cassandra.cluster import Cluster
 from sanic import Sanic
 from .logger_conf import make_logger
 from .config import Configs
-import time
 
 APP = Sanic()
 
@@ -32,6 +33,12 @@ LOGGER = make_logger('logs/app_logs', 'app_logs')
 
 @APP.listener('before_server_start')
 async def setup(app, loop):
+    """
+    Sanic before server start listener
+    :param app:
+    :param loop:
+    :return:
+    """
     try:
         await PostgresDatabaseManager.create()
     except Exception as e:
@@ -44,12 +51,23 @@ async def setup(app, loop):
 
 @APP.listener('after_server_start')
 async def notify_server_started(app, loop):
+    """
+    Sanic after server start listener
+    :param app:
+    :param loop:
+    :return:
+    """
     from api.services import Consumer
-    consumer = Consumer()
-    await consumer.listen()
+    await Consumer.listen()
 
 
 @APP.listener('after_server_stop')
 async def close_db(app, loop):
+    """
+    Sanic after server stop listener
+    :param app:
+    :param loop:
+    :return:
+    """
     await RedisDatabaseManager.close()
     await ZookeeperDatabaseManager.close()

@@ -11,9 +11,8 @@ from aiokafka import AIOKafkaConsumer
 from common.database import PostgresDatabaseManager, CassandraDatabaseManager
 from common.redis import RedisDatabaseManager
 from common.zookeeper import ZookeeperDatabaseManager
-from api.logger_conf import make_logger
+from api.app import make_logger
 from api.config import Configs
-
 
 LOGGER = make_logger('logs/consumer_log', 'consumer_logs')
 TOPIC = 'test_topic'
@@ -27,89 +26,100 @@ class Consumer:
     """
     Consumer that reads messages from kafka
     """
+    _consumer: AIOKafkaConsumer = None
+    _counter: int = 0
+    _uncommitted_messages = 0
+    _last_commit_time = None
+    _commit_task: asyncio.Task = None
 
-    def __init__(self):
-        self.consumer = AIOKafkaConsumer(TOPIC,
+    @classmethod
+    async def _init(cls):
+        cls._consumer = AIOKafkaConsumer(TOPIC,
                                          group_id=GROUP,
                                          bootstrap_servers=f"{Configs['KAFKA_ADDRESS']}:{Configs['KAFKA_PORT']}",
                                          enable_auto_commit=False,
                                          loop=loop,
-                                         value_deserializer=lambda m: json.loads(m.decode('ascii'))
-                                         )
-        self.counter = 0
-        self._uncommitted_messages = 0
-        self._last_commit_time = None
-        self._commit_task: asyncio.Task = None
+                                         value_deserializer=lambda m: json.loads(m.decode('ascii')))
 
-    async def connect(self):
         while True:
             try:
-                await self.consumer.start()
+                await cls._consumer.start()
                 LOGGER.info("Connection with Kafka broker successfully established")
-                self._commit_task = asyncio.ensure_future(self.commit_every_10_seconds())
+                cls._commit_task = asyncio.ensure_future(cls.commit_every_10_seconds())
                 break
             except Exception as e:
                 LOGGER.error("Couldn't connect to Kafka broker because of %s, try again in 3 seconds", e)
             await asyncio.sleep(3)
 
-    async def listen(self):
+        cls._counter = 0
+
+    @classmethod
+    async def listen(cls):
         """
         listener that catches messages
          and either store in db or commit
         :return:
         """
         try:
-            await self.connect()
-            async for msg in self.consumer:
-                LOGGER.info(f'topic: {msg.topic} and value that will be added to database, offset {msg.offset}, value={msg.value}')
-                self._uncommitted_messages += 1
-                LOGGER.info('Uncommited message = %s', self._uncommitted_messages)
-                self.counter += 1
-                LOGGER.info('Counter = %s', self.counter)
+            await cls._init()
+            async for msg in cls._consumer:
+                cls._uncommitted_messages += 1
+                LOGGER.info('Uncommited message = %s', cls._uncommitted_messages)
+                cls._counter += 1
+                LOGGER.info('Counter = %s', cls._counter)
 
-                if self.counter >= 10:
-                    await self.consumer.commit()
-                    self._uncommitted_messages = 0
-                    self.counter = 0
+                if cls._counter >= 10:
+                    await cls._consumer.commit()
+                    cls._uncommitted_messages = 0
+                    cls._counter = 0
                     LOGGER.info("Commit every 10 messages")
-                await self.write_to_db(id=uuid.uuid4(), topic=str(msg.topic), message=f'key={msg.key}, value={msg.value}', offset=str(msg.offset))
+                await cls.write_to_db(id=uuid.uuid4(), topic=str(msg.topic),
+                                      message=f'key={msg.key}, value={msg.value}', offset=str(msg.offset))
         except Exception as e:
-            LOGGER.error('Listener error: ', e)
-            self.connect()
+            LOGGER.error('Listener error: %s', e)
+            cls._init()
         finally:
-            await self.consumer.stop()
+            await cls._consumer.stop()
 
-    async def write_to_db(self, id, topic, message, offset):
+    @classmethod
+    async def write_to_db(cls, id, topic, message, offset):
         try:
             if Configs['DATA_STORAGE'] == 'POSTGRES':
                 await PostgresDatabaseManager.insert(topic,
-                                            message)
+                                                     message)
             if Configs['DATA_STORAGE'] == 'CASSANDRA':
                 await CassandraDatabaseManager.insert(id,
-                                                topic,
-                                                message)
+                                                      topic,
+                                                      message)
             if Configs['OFFSET_STORAGE'] == 'REDIS':
                 await RedisDatabaseManager.set('kafka', offset)
             if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
                 await ZookeeperDatabaseManager.set('offset', offset)
         except Exception as e:
-            LOGGER.error('Databases', e)
+            LOGGER.error('Databases %s', e)
 
-    async def commit_every_10_seconds(self):
+    @classmethod
+    async def commit_every_10_seconds(cls):
         """
         Method that commits message very 10 seconds
         :return:
         """
-        if self._last_commit_time is None:
-            self._last_commit_time = time.time()
+        # if cls._last_commit_time is None:
+        #     cls._last_commit_time = time.time()
+        # while True:
+        #     passed_time = time.time() - cls._last_commit_time
+        #     if passed_time < 10:
+        #         await asyncio.sleep(10 - passed_time)
+        #         if time.time() - cls._last_commit_time < 10:
+        #             continue
+        #     if cls._counter > 0:
+        #         await cls._consumer.commit()
+        #         LOGGER.info("Every 10 seconds commit")
+        #         cls._counter = 0
+        #     cls._last_commit_time = time.time()
         while True:
-            passed_time = time.time() - self._last_commit_time
-            if passed_time < 10:
-                await asyncio.sleep(10 - passed_time)
-                if time.time() - self._last_commit_time < 10:
-                    continue
-            if self.counter > 0:
-                await self.consumer.commit()
+            await asyncio.sleep(10)
+            if cls._counter > 0:
+                cls._consumer.commit()
                 LOGGER.info("Every 10 seconds commit")
-                self.counter = 0
-            self._last_commit_time = time.time()
+                cls._counter = 0
