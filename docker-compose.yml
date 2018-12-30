@@ -57,7 +57,7 @@ services:
     environment:
       DOCKER: 1
       DATA_STORAGE: CASSANDRA
-      OFFSET_STORAGE: REDIS
+      OFFSET_STORAGE: ZOOKEEPER
     volumes:
       - ./appservice:/appservice
     ports:

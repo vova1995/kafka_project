@@ -34,7 +34,7 @@ async def setup(app, loop):
         if Configs['DATA_STORAGE'] == 'POSTGRES':
             await PostgresDatabaseManager.create()
             LOGGER.info('Postgres started working')
-        if Configs['DATA_STORAGE'] == 'CASSANDRA':
+        else:
             await CassandraDatabaseManager.create()
             LOGGER.info('Cassandra started working')
     except Exception as e:
@@ -43,7 +43,7 @@ async def setup(app, loop):
         if Configs['OFFSET_STORAGE'] == 'REDIS':
             await RedisDatabaseManager.connect()
             LOGGER.info('Redis started working')
-        if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
+        else:
             await ZookeeperDatabaseManager.connect()
             await ZookeeperDatabaseManager.ensure_or_create('/offset')
             LOGGER.info('Zookeeper is connected')
@@ -76,7 +76,7 @@ async def close_db(app, loop):
     try:
         if Configs['OFFSET_STORAGE'] == 'REDIS':
             await RedisDatabaseManager.close()
-        if Configs['OFFSET_STORAGE'] == 'ZOOKEEPER':
+        else:
             await ZookeeperDatabaseManager.close()
     except Exception as e:
         LOGGER.error('No sql database error %s', e)
