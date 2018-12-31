@@ -85,7 +85,7 @@ class CassandraDatabaseManager:
         """
         LOGGER.info("creating keyspace...")
         try:
-            cls._session.execute_async("""
+            cls._session.execute("""
                             CREATE KEYSPACE IF NOT EXISTS %s
                             WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '2' }
                             """ % KEY_SPACE)
