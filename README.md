@@ -65,4 +65,5 @@ environment:
 In order to check test please navigate to the folder tests and do following
 ```
 pytest test_producer
+python -m unittest -v test_module
 ```
