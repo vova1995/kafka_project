@@ -7,7 +7,7 @@ from sanic import Sanic
 from .logger_conf import make_logger
 from .config import Configs, CONSUMER_LOG_FILE_PATH
 
-APP = Sanic()
+APP = Sanic(__name__)
 
 LOGGER = make_logger(CONSUMER_LOG_FILE_PATH, 'consumer_logger')
 

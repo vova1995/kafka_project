@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from api.app import APP
+from consumer.api.app import APP
 from .fake_message import FakeMessage
 from api.database import PostgresDatabaseManager
 
@@ -30,5 +30,5 @@ def new_record():
     Test for model Messages
     :return: user
     """
-    PostgresDatabaseManager.insert(FakeMessage.topic, FakeMessage.message)
+    PostgresDatabaseManager.insert(FakeMessage.id ,FakeMessage.topic, FakeMessage.message)
 
