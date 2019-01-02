@@ -1,9 +1,18 @@
+"""
+Prodicer logger module
+"""
 import os
 import logging
 from logging.handlers import RotatingFileHandler
 
 
 def make_logger(file_path, logger_name):
+    """
+    Producer logger
+    :param file_path:
+    :param logger_name:
+    :return: logger
+    """
     logger = logging.getLogger(logger_name)
 
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')

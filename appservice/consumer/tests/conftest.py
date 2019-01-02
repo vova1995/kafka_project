@@ -5,7 +5,6 @@ import pytest
 
 from api.app import APP
 from .fake_message import FakeMessage
-from api.database import PostgresDatabaseManager
 
 
 @pytest.fixture
@@ -30,5 +29,6 @@ def new_record():
     Test for model Messages
     :return: user
     """
-    PostgresDatabaseManager.insert(FakeMessage.topic, FakeMessage.message)
+    from api.database import PostgresDatabaseManager
 
+    PostgresDatabaseManager.insert(FakeMessage.id ,FakeMessage.topic, FakeMessage.message)
