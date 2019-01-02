@@ -17,12 +17,11 @@ usage:
 
 
 producer:
-	(cd appservice ; python producer_run.py)
+	(cd appservice/producer ; python manage.py)
 
 consumer:
-	(cd appservice ; python consumer_run.py)
+	(cd appservice/consumer ; python manage.py)
 
 run:
 	gnome-terminal -e "bash -c \"make consumer; exec bash\""
 	gnome-terminal -e "bash -c \"make producer; exec bash\""
-	python appservice/run.py

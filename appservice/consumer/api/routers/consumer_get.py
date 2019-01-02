@@ -2,15 +2,14 @@
     Module for consumer routers
 """
 from sanic import response
-from api.app import APP
-from api.app import LOGGER
+from api.app import APP, LOGGER
 from api.config import Configs
 
 
 @APP.route("/consumer_offset", methods=['GET'])
 async def get_offset(request):
     """
-    Method that gets current offset from redis
+    Method that gets current offset from redis or zookeeper
     :param request:
     :return: offset
     """
@@ -31,9 +30,9 @@ async def get_offset(request):
 @APP.route("/consumer_rows", methods=['GET'])
 async def rows_count(request):
     """
-    Method that counts rows from postgres
+    Method that counts rows from postgres or cassandra
     :param request:
-    :return:
+    :return: rows
     """
     if Configs['DATA_STORAGE'] == 'POSTGRES':
         from common.database import PostgresDatabaseManager
