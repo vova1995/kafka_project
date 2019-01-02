@@ -20,5 +20,5 @@ if not docker:
 else:
     Configs = {
         'KAFKA_ADDRESS': os.environ.get('KAFKA_ADDRESS') or 'kafka',
-        'KAFKA_PORT': os.environ.get('KAFKA_PORT') or 9092,
+        'KAFKA_PORT': os.environ.get('KAFKA_PORT') or 9093,
     }

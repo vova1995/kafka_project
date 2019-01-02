@@ -39,4 +39,6 @@ else:
         'ZOOKEEPER_HOST': os.environ.get('ZOOKEEPER_HOST') or 'zookeeper',
         'REDIS_HOST': os.environ.get('REDIS_HOST') or 'redis',
         'CASSANDRA_HOST': os.environ.get('CASSANDRA_HOST') or 'cassandra',
+        'KAFKA_PORT': os.environ.get('KAFKA_PORT') or 9093,
+
     })
