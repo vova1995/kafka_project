@@ -23,11 +23,14 @@ class Consumer:
     """
     _consumer: AIOKafkaConsumer = None
     _counter: int = 0
-    _last_commit_time = None
     _commit_task: asyncio.Task = None
 
     @classmethod
     async def _init(cls):
+        """
+        Initialise consumer
+        :return:
+        """
         cls._consumer = AIOKafkaConsumer(TOPIC,
                                          group_id=GROUP,
                                          bootstrap_servers=f"{Configs['KAFKA_ADDRESS']}:{Configs['KAFKA_PORT']}",
@@ -74,6 +77,14 @@ class Consumer:
 
     @classmethod
     async def write_to_db(cls, id, topic, message, offset):
+        """
+        Method writes data into different dbs
+        :param id:
+        :param topic:
+        :param message:
+        :param offset:
+        :return:
+        """
         try:
             if Configs['DATA_STORAGE'] == 'POSTGRES':
                 from common.database import PostgresDatabaseManager
