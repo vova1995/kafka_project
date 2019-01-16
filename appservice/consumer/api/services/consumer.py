@@ -89,7 +89,7 @@ class Consumer:
             if Configs['DATA_STORAGE'] == 'POSTGRES':
                 from common.database import PostgresDatabaseManager
 
-                await PostgresDatabaseManager.insert(topic,
+                await PostgresDatabaseManager.insert(id, topic,
                                                      message)
             else:
                 from common.database import CassandraDatabaseManager

@@ -40,7 +40,7 @@ class PostgresDatabaseManager:
             await conn.execute(CreateTable(Messages))
 
     @classmethod
-    async def insert(cls, topic, message):
+    async def insert(cls, id, topic, message):
         """
         Method insert data into postgres
         :param topic:
@@ -49,7 +49,7 @@ class PostgresDatabaseManager:
         """
         engine = await cls.create_engine()
         async with engine.acquire() as conn:
-            await conn.execute(Messages.insert().values(topic=topic, message=message))
+            await conn.execute(Messages.insert().values(id=id, topic=topic, message=message))
 
     @classmethod
     async def select_count(cls):

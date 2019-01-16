@@ -56,8 +56,8 @@ services:
        dockerfile: Dockerfile
     environment:
       DOCKER: 1
-      DATA_STORAGE: POSTGRES
-      OFFSET_STORAGE: REDIS
+      DATA_STORAGE: CASSANDRA
+      OFFSET_STORAGE: ZOOKEEPER
     volumes:
       - ./appservice:/appservice
     ports:
