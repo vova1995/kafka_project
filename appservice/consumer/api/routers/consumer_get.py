@@ -34,12 +34,9 @@ async def rows_count(request):
     :param request:
     :return: rows
     """
-    if Configs['DATA_STORAGE'] == 'POSTGRES':
-        from common.database import PostgresDatabaseManager
-        rows = await PostgresDatabaseManager.select_count()
-    else:
-        from common.database import CassandraDatabaseManager
-        rows = await CassandraDatabaseManager.select_count()
+
+    from common.database import database
+    rows = await database.select_count()
     LOGGER.info(rows)
     return response.json({
         'rows': rows

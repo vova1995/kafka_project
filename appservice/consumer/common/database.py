@@ -103,7 +103,7 @@ class CassandraDatabaseManager:
         cls._session.set_keyspace(KEY_SPACE)
         LOGGER.info("creating table...")
         try:
-            cls._session.execute_async("""
+            future = cls._session.execute_async("""
                             CREATE TABLE IF NOT EXISTS messages (
                                 id UUID,
                                 topic text,
@@ -111,6 +111,9 @@ class CassandraDatabaseManager:
                             PRIMARY KEY (id)
                           )
                             """)
+            while True:
+                await future
+                break
         except Exception as e:
             LOGGER.error(e)
 
@@ -125,9 +128,13 @@ class CassandraDatabaseManager:
         """
         cls._session.set_keyspace(KEY_SPACE)
         try:
-            cls._session.execute_async("INSERT INTO messages (id, topic, message) "
+            future = cls._session.execute_async("INSERT INTO messages (id, topic, message) "
                                        "VALUES (%s, %s, %s)",
                                        (id, topic, message)).result()
+            while True:
+                await future
+                break
+
         except Exception as e:
             LOGGER.error(e)
 
@@ -140,3 +147,9 @@ class CassandraDatabaseManager:
         cls._session.set_keyspace(KEY_SPACE)
         res = cls._session.execute_async("SELECT COUNT(*) FROM messages").result()
         return res
+
+
+if Configs['DATA_STORAGE'] == 'POSTGRES':
+    database = PostgresDatabaseManager
+else:
+    database = CassandraDatabaseManager

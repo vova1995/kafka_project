@@ -86,17 +86,10 @@ class Consumer:
         :return:
         """
         try:
-            if Configs['DATA_STORAGE'] == 'POSTGRES':
-                from common.database import PostgresDatabaseManager
+            from common.database import database
 
-                await PostgresDatabaseManager.insert(id, topic,
-                                                     message)
-            else:
-                from common.database import CassandraDatabaseManager
+            await database.insert(id, topic, message)
 
-                await CassandraDatabaseManager.insert(id,
-                                                      topic,
-                                                      message)
             if Configs['OFFSET_STORAGE'] == 'REDIS':
                 from common.redis import RedisDatabaseManager
 
